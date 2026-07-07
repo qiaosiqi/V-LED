@@ -340,7 +340,6 @@ static const struct file_operations vled_fops = {
 	.read = vled_read,
 	.write = vled_write,
 	.release = vled_release,
-	.llseek = no_llseek,
 };
 
 static int __init vled_init(void)
