@@ -46,6 +46,8 @@ struct vled_device {
 struct vled_file_context {
 	loff_t read_offset;
 	loff_t write_offset;
+	char *read_snapshot;
+	size_t read_snapshot_len;
 };
 
 static struct vled_device vled;
@@ -252,13 +254,24 @@ static int vled_open(struct inode *inode, struct file *file)
 	if (!ctx)
 		return -ENOMEM;
 
+	ctx->read_snapshot = kzalloc(PAGE_SIZE, GFP_KERNEL);
+	if (!ctx->read_snapshot) {
+		kfree(ctx);
+		return -ENOMEM;
+	}
+
 	file->private_data = ctx;
 	return nonseekable_open(inode, file);
 }
 
 static int vled_release(struct inode *inode, struct file *file)
 {
-	kfree(file->private_data);
+	struct vled_file_context *ctx = file->private_data;
+
+	if (ctx) {
+		kfree(ctx->read_snapshot);
+		kfree(ctx);
+	}
 	file->private_data = NULL;
 	return 0;
 }
@@ -267,9 +280,7 @@ static ssize_t vled_read(struct file *file, char __user *user_buf,
 			 size_t count, loff_t *ppos)
 {
 	struct vled_file_context *ctx = file->private_data;
-	char *json;
 	char *escaped_text;
-	size_t json_len;
 	ssize_t ret;
 
 	if (!ctx)
@@ -277,26 +288,30 @@ static ssize_t vled_read(struct file *file, char __user *user_buf,
 	if (count == 0)
 		return 0;
 
-	json = kzalloc(PAGE_SIZE, GFP_KERNEL);
-	if (!json)
-		return -ENOMEM;
+	/*
+	 * Capture one stable snapshot when this open file starts reading.
+	 * The JSON is first generated in the driver's shared PAGE_SIZE buffer,
+	 * so read() and write() both operate through that required buffer.
+	 */
+	if (ctx->read_offset == 0) {
+		escaped_text = kzalloc(VLED_ESCAPED_TEXT_MAX, GFP_KERNEL);
+		if (!escaped_text)
+			return -ENOMEM;
 
-	escaped_text = kzalloc(VLED_ESCAPED_TEXT_MAX, GFP_KERNEL);
-	if (!escaped_text) {
-		kfree(json);
-		return -ENOMEM;
+		mutex_lock(&vled.lock);
+		vled.buffer_len = vled_build_json_locked(
+			vled.buffer, sizeof(vled.buffer), escaped_text,
+			VLED_ESCAPED_TEXT_MAX);
+		memcpy(ctx->read_snapshot, vled.buffer, vled.buffer_len);
+		ctx->read_snapshot_len = vled.buffer_len;
+		mutex_unlock(&vled.lock);
+
+		kfree(escaped_text);
 	}
 
-	mutex_lock(&vled.lock);
-	json_len = vled_build_json_locked(json, PAGE_SIZE, escaped_text,
-					  VLED_ESCAPED_TEXT_MAX);
-	mutex_unlock(&vled.lock);
-
-	ret = simple_read_from_buffer(user_buf, count, &ctx->read_offset, json,
-				      json_len);
-
-	kfree(escaped_text);
-	kfree(json);
+	ret = simple_read_from_buffer(user_buf, count, &ctx->read_offset,
+				      ctx->read_snapshot,
+				      ctx->read_snapshot_len);
 	return ret;
 }
 
@@ -327,6 +342,13 @@ static ssize_t vled_write(struct file *file, const char __user *user_buf,
 		strscpy(vled.buffer, command, sizeof(vled.buffer));
 		vled.buffer_len = strlen(vled.buffer);
 		ctx->write_offset += count;
+		/*
+		 * A successful command creates a new readable state for this
+		 * file without coupling its independent write position to the
+		 * read position.
+		 */
+		ctx->read_offset = 0;
+		ctx->read_snapshot_len = 0;
 	}
 	mutex_unlock(&vled.lock);
 
