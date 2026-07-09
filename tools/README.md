@@ -97,7 +97,7 @@ sudo chmod 666 /dev/vled
 
 ## UDP 桥接测试
 
-Windows 模拟器 `win_sim/vled_sim.py` 使用 UDP：
+Windows 模拟器 `simulator/vled_sim.py` 使用 UDP：
 
 ```python
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
