@@ -142,7 +142,7 @@ ttk.Label(title_content, text="虚拟LED点阵模拟器", style="Title.TLabel").
 ttk.Label(title_content, text="v2.2", foreground=COLORS['text_secondary'],
           background=COLORS['bg_dark'], font=("Microsoft YaHei UI", 8)).pack(side="left", padx=(8, 0))
 
-# ====================== 状态信息栏======================
+# ====================== 状态信息栏=====================
 status_frame = ttk.Frame(root, style="Panel.TFrame", padding=6)
 status_frame.pack(fill="x", padx=8, pady=2)
 
