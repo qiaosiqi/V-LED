@@ -3,7 +3,7 @@ CFLAGS ?= -Wall -Wextra -O2
 
 .PHONY: all clean
 
-all: vled_cli vled_bridge vled_fd_probe
+all: vled_cli vled_bridge vled_fd_probe vled_poll_probe
 
 vled_cli: vled_cli.c
 	$(CC) $(CFLAGS) -o $@ $<
@@ -14,5 +14,8 @@ vled_bridge: vled_bridge.c
 vled_fd_probe: vled_fd_probe.c
 	$(CC) $(CFLAGS) -o $@ $<
 
+vled_poll_probe: vled_poll_probe.c
+	$(CC) $(CFLAGS) -pthread -o $@ $<
+
 clean:
-	rm -f vled_cli vled_bridge vled_fd_probe
+	rm -f vled_cli vled_bridge vled_fd_probe vled_poll_probe
