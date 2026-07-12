@@ -74,6 +74,6 @@ python simulator/vled_sim.py
 python simulator/test_udp.py
 ```
 
-人工 GUI 门禁还需确认：窗口能显示报文、手动覆盖与恢复行为正确、日志条数
-受限、关闭窗口后进程及时退出。Windows 人工检查通过不等同于 Linux 全链路
-验收；跨机 UDP 证据留到 P3/P4。
+人工 GUI 应确认：窗口能显示报文、手动覆盖与恢复行为正确、日志条数受限、关闭
+窗口后进程及时退出。P2 人工检查与 P3/P4 跨机 UDP 已通过并固化证据；Windows
+本机测试仍不能替代目标 Linux 驱动与 bridge 回归。

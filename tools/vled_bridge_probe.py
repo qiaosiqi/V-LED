@@ -50,7 +50,7 @@ def main() -> int:
         receiver.bind(("127.0.0.1", 0))
         receiver.settimeout(0.35)
         port = receiver.getsockname()[1]
-        with tempfile.TemporaryDirectory(prefix="vled-bridge-") as directory:
+        with tempfile.TemporaryDirectory(prefix="vled_bridge-") as directory:
             state_file = Path(directory, "vled.fifo")
             os.mkfifo(state_file)
             process = subprocess.Popen(

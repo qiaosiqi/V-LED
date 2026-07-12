@@ -138,10 +138,22 @@ JSON。
 每次 `open()` 都会创建独立文件上下文，其中分别保存读偏移、写偏移和
 稳定的读取快照。第一次非零长度 `read()` 在设备 mutex 内捕获共享 JSON，
 之后的分段读取只推进当前 FD 的 `read_offset`。即使其他 FD 更新设备，旧
-FD 仍会读完旧快照；读到 EOF 后继续返回 0。当前 FD 成功写入（包括
+FD 仍会读完旧快照。读完快照后，如果已有更新版本则下一次 read 捕获新快照；
+否则阻塞 FD 在 wait queue 等待，`O_NONBLOCK` FD 返回 `EAGAIN`。当前 FD 成功写入（包括
 `STATUS`）后才使自己的下一次读取重新捕获快照，其他 FD 的进度不受影响。
 `dup()` 得到的描述符按 POSIX 语义共享同一个文件上下文。设备不可 seek，
 `lseek()` 返回 `ESPIPE`。
+
+## poll、阻塞 read 与 wait queue
+
+新打开的 FD 可立即读取当前状态。每个文件上下文记录已消费版本；消费当前版本
+后，`.poll` 只有在出现未消费版本时才返回 `POLLIN | POLLRDNORM`。有效状态变化
+递增 version 后调用 `wake_up_interruptible()`；重复设置、`STATUS` 和失败写入既
+不递增也不唤醒。阻塞 read 可被信号中断，非阻塞 read 在没有新版本时返回
+`EAGAIN`。长期打开的 FD 因而能按版本连续获得稳定快照而不忙等。
+
+`tools/vled_poll_probe /dev/vled` 覆盖 T-POLL-01..08；统一入口
+`tools/vled_verify.sh` 同时执行 P1–P5 回归。
 
 ## P1 自动验收
 
@@ -166,8 +178,8 @@ sudo rmmod vled
 预期结果是每个测试 ID 输出 `PASS`，末行输出
 `VLED P1 probe: all checks passed`，进程退出码为 0。任一系统调用返回值、
 errno、状态 JSON、版本、偏移或快照不符合冻结契约时，探针输出 `FAIL` 并
-以非零状态退出。Windows 侧无法构建或加载内核模块，因此未在目标 Linux
-实际运行前，P1 结果必须标记为 `IMPLEMENTED_NOT_RUN`，不得记为 `PASS`。
+以非零状态退出。P1 已在目标 Linux 通过并固化证据；Windows 侧只能做静态检查，
+不能替代目标 Linux 运行。
 
 ## 构建与加载
 

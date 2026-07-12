@@ -50,11 +50,11 @@
 2. Linux 端只测试已推送的明确提交哈希。
 3. Linux 端测试前记录 `git status` 和 `git rev-parse HEAD`。
 4. 测试结果按运行编号提交回仓库，或先由用户传回 Windows 端整理。
-5. 第一次推送前，因远端仍含旧 `a40be52`，需要一次经用户动作时确认的 `git push --force-with-lease`；之后保持 fast-forward。
+5. 首次历史对齐已经完成；后续只允许普通 fast-forward 推送，禁止 force push。
 6. 用户已明确 Linux checkout 仅用于测试，Windows 的 `integration-promote-try` 是权威工作副本；首次测试前可以用 Windows/GitHub 版本覆盖 Linux checkout。
 7. 实际执行远端强制更新前仍展示命令和 lease 对象，避免覆盖动作期间出现的新远端提交。
 
-### 3.1 远端引用（2026-07-12 fetch 后）
+### 3.1 远端引用与当前基线
 
 | 引用 | 提交 |
 |---|---|
@@ -62,6 +62,10 @@
 | `origin/integration-promote-try`（P1 受测时） | `d8c1c0dcd451c78a3df4d96730267fad16d89e4c` |
 
 Linux 已切换到 `integration-promote-try`，P1 在明确提交 `d8c1c0d` 上执行。
+
+以上表格保留 P1 运行时的历史引用。P6 启动时，Windows `HEAD`、本地
+`integration-promote-try` 与 `origin/integration-promote-try` 均为 `6c51e5d`；
+该提交包含 P5 正式证据，后续只从此基线普通 fast-forward 前进。
 
 ### 3.2 当前 Linux 工作树未跟踪内容
 
