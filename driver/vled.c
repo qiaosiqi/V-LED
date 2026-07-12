@@ -7,6 +7,7 @@
 #include <linux/mm.h>
 #include <linux/module.h>
 #include <linux/mutex.h>
+#include <linux/poll.h>
 #include <linux/slab.h>
 #include <linux/string.h>
 #include <linux/uaccess.h>
@@ -38,6 +39,7 @@ struct vled_device {
 	struct class *class;
 	struct device *device;
 	struct mutex lock;
+	wait_queue_head_t wait_queue;
 	char buffer[PAGE_SIZE];
 	size_t buffer_len;
 	struct vled_state state;
@@ -51,6 +53,9 @@ struct vled_file_context {
 	size_t read_snapshot_len;
 	unsigned long read_snapshot_version;
 	bool read_snapshot_valid;
+	unsigned long consumed_version;
+	bool consumed_version_valid;
+	bool read_refresh_pending;
 	char *write_buffer;
 };
 
@@ -294,6 +299,7 @@ static int vled_open(struct inode *inode, struct file *file)
 	}
 
 	mutex_init(&ctx->lock);
+	ctx->read_refresh_pending = true;
 	file->private_data = ctx;
 	return 0;
 }
@@ -324,23 +330,75 @@ static ssize_t vled_read(struct file *file, char __user *user_buf,
 	if (count == 0)
 		return 0;
 
-	mutex_lock(&ctx->lock);
-	if (!ctx->read_snapshot_valid) {
+	for (;;) {
+		mutex_lock(&ctx->lock);
+		if (ctx->read_snapshot_valid &&
+		    ctx->read_offset < ctx->read_snapshot_len)
+			break;
+
 		mutex_lock(&vled.lock);
-		memcpy(ctx->read_snapshot, vled.buffer, vled.buffer_len);
-		ctx->read_snapshot[vled.buffer_len] = '\0';
-		ctx->read_snapshot_len = vled.buffer_len;
-		ctx->read_snapshot_version = vled.state.version;
-		ctx->read_offset = 0;
-		ctx->read_snapshot_valid = true;
+		if (ctx->read_refresh_pending || !ctx->consumed_version_valid ||
+		    ctx->consumed_version != vled.state.version) {
+			memcpy(ctx->read_snapshot, vled.buffer, vled.buffer_len);
+			ctx->read_snapshot[vled.buffer_len] = '\0';
+			ctx->read_snapshot_len = vled.buffer_len;
+			ctx->read_snapshot_version = vled.state.version;
+			ctx->read_offset = 0;
+			ctx->read_snapshot_valid = true;
+			ctx->read_refresh_pending = false;
+			mutex_unlock(&vled.lock);
+			break;
+		}
 		mutex_unlock(&vled.lock);
+		mutex_unlock(&ctx->lock);
+
+		if (file->f_flags & O_NONBLOCK)
+			return -EAGAIN;
+
+		ret = wait_event_interruptible(
+			vled.wait_queue,
+			READ_ONCE(ctx->read_refresh_pending) ||
+			!READ_ONCE(ctx->consumed_version_valid) ||
+			READ_ONCE(ctx->consumed_version) !=
+				READ_ONCE(vled.state.version));
+		if (ret)
+			return ret;
 	}
 
 	ret = simple_read_from_buffer(user_buf, count, &ctx->read_offset,
 				      ctx->read_snapshot,
 				      ctx->read_snapshot_len);
+	if (ret >= 0 && ctx->read_offset >= ctx->read_snapshot_len) {
+		ctx->consumed_version = ctx->read_snapshot_version;
+		ctx->consumed_version_valid = true;
+		ctx->read_snapshot_valid = false;
+	}
 	mutex_unlock(&ctx->lock);
 	return ret;
+}
+
+static __poll_t vled_poll(struct file *file, poll_table *wait)
+{
+	struct vled_file_context *ctx = file->private_data;
+	__poll_t mask = 0;
+
+	if (!ctx)
+		return EPOLLERR;
+
+	poll_wait(file, &vled.wait_queue, wait);
+	mutex_lock(&ctx->lock);
+	if (ctx->read_snapshot_valid &&
+	    ctx->read_offset < ctx->read_snapshot_len) {
+		mask = EPOLLIN | EPOLLRDNORM;
+	} else {
+		mutex_lock(&vled.lock);
+		if (ctx->read_refresh_pending || !ctx->consumed_version_valid ||
+		    ctx->consumed_version != vled.state.version)
+			mask = EPOLLIN | EPOLLRDNORM;
+		mutex_unlock(&vled.lock);
+	}
+	mutex_unlock(&ctx->lock);
+	return mask;
 }
 
 static ssize_t vled_write(struct file *file, const char __user *user_buf,
@@ -353,6 +411,7 @@ static ssize_t vled_write(struct file *file, const char __user *user_buf,
 	char *command;
 	size_t old_offset;
 	bool changed;
+	bool should_wake = false;
 	int json_len;
 	ssize_t ret;
 
@@ -419,6 +478,8 @@ static ssize_t vled_write(struct file *file, const char __user *user_buf,
 	ctx->read_snapshot_len = 0;
 	ctx->read_snapshot_version = 0;
 	ctx->read_snapshot_valid = false;
+	ctx->read_refresh_pending = true;
+	should_wake = changed;
 	mutex_unlock(&vled.lock);
 	ret = count;
 	goto unlock_context;
@@ -431,6 +492,8 @@ unlock_context:
 	kfree(candidate);
 	kfree(escaped_text);
 	kfree(new_json);
+	if (should_wake)
+		wake_up_interruptible(&vled.wait_queue);
 	return ret;
 }
 
@@ -439,6 +502,7 @@ static const struct file_operations vled_fops = {
 	.open = vled_open,
 	.read = vled_read,
 	.write = vled_write,
+	.poll = vled_poll,
 	.release = vled_release,
 };
 
@@ -449,6 +513,7 @@ static int __init vled_init(void)
 	int ret;
 
 	mutex_init(&vled.lock);
+	init_waitqueue_head(&vled.wait_queue);
 	vled_reset_state();
 
 	escaped_text = kzalloc(VLED_ESCAPED_TEXT_MAX, GFP_KERNEL);
