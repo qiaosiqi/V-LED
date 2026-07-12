@@ -1,0 +1,97 @@
+== build driver and tools ==
+make: 进入目录“/home/siqi/siqi_ws/V-LED/driver”
+make -C /lib/modules/6.17.0-35-generic/build M=/home/siqi/siqi_ws/V-LED/driver clean
+make[1]: 进入目录“/usr/src/linux-headers-6.17.0-35-generic”
+make[2]: 进入目录“/home/siqi/siqi_ws/V-LED/driver”
+make[2]: 离开目录“/home/siqi/siqi_ws/V-LED/driver”
+make[1]: 离开目录“/usr/src/linux-headers-6.17.0-35-generic”
+make: 离开目录“/home/siqi/siqi_ws/V-LED/driver”
+make: 进入目录“/home/siqi/siqi_ws/V-LED/driver”
+make -C /lib/modules/6.17.0-35-generic/build M=/home/siqi/siqi_ws/V-LED/driver modules
+make[1]: 进入目录“/usr/src/linux-headers-6.17.0-35-generic”
+make  -C /home/siqi/siqi_ws/V-LED/driver \
+-f /usr/src/linux-headers-6.17.0-35-generic/Makefile modules
+make[2]: 进入目录“/home/siqi/siqi_ws/V-LED/driver”
+make --no-print-directory -C /home/siqi/siqi_ws/V-LED/driver \
+-f /usr/src/linux-headers-6.17.0-35-generic/Makefile modules
+warning: the compiler differs from the one used to build the kernel
+  The kernel was built by: x86_64-linux-gnu-gcc-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+  You are using:           gcc-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+make -f /usr/src/linux-headers-6.17.0-35-generic/scripts/Makefile.build obj=. need-builtin=1 need-modorder=1 
+# CC [M]  vled.o
+  gcc-13 -Wp,-MMD,./.vled.o.d -nostdinc -I/usr/src/linux-headers-6.17.0-35-generic/arch/x86/include -I/usr/src/linux-headers-6.17.0-35-generic/arch/x86/include/generated -I/usr/src/linux-headers-6.17.0-35-generic/include -I/usr/src/linux-headers-6.17.0-35-generic/include -I/usr/src/linux-headers-6.17.0-35-generic/arch/x86/include/uapi -I/usr/src/linux-headers-6.17.0-35-generic/arch/x86/include/generated/uapi -I/usr/src/linux-headers-6.17.0-35-generic/include/uapi -I/usr/src/linux-headers-6.17.0-35-generic/include/generated/uapi -include /usr/src/linux-headers-6.17.0-35-generic/include/linux/compiler-version.h -include /usr/src/linux-headers-6.17.0-35-generic/include/linux/kconfig.h -I/usr/src/linux-headers-6.17.0-35-generic/ubuntu/include -include /usr/src/linux-headers-6.17.0-35-generic/include/linux/compiler_types.h -D__KERNEL__ -std=gnu11 -fshort-wchar -funsigned-char -fno-common -fno-PIE -fno-strict-aliasing -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -mno-avx -mno-sse4a -fcf-protection=none -m64 -falign-jumps=1 -falign-loops=1 -mno-80387 -mno-fp-ret-in-387 -mpreferred-stack-boundary=3 -mskip-rax-setup -march=x86-64 -mtune=generic -mno-red-zone -mcmodel=kernel -mstack-protector-guard-reg=gs -mstack-protector-guard-symbol=__ref_stack_chk_guard -Wno-sign-compare -fno-asynchronous-unwind-tables -mindirect-branch=thunk-extern -mindirect-branch-register -mindirect-branch-cs-prefix -mfunction-return=thunk-extern -fno-jump-tables -mharden-sls=all -fpatchable-function-entry=16,16 -fno-delete-null-pointer-checks -O2 -fno-allow-store-data-races -fstack-protector-strong -fno-omit-frame-pointer -fno-optimize-sibling-calls -ftrivial-auto-var-init=zero -fno-stack-clash-protection -fzero-call-used-regs=used-gpr -pg -mrecord-mcount -mfentry -DCC_USING_FENTRY -falign-functions=16 -fstrict-flex-arrays=3 -fno-strict-overflow -fno-stack-check -fconserve-stack -fno-builtin-wcslen -Wall -Wextra -Wundef -Werror=implicit-function-declaration -Werror=implicit-int -Werror=return-type -Werror=strict-prototypes -Wno-format-security -Wno-trigraphs -Wno-frame-address -Wno-address-of-packed-member -Wmissing-declarations -Wmissing-prototypes -Wframe-larger-than=1024 -Wno-main -Wno-dangling-pointer -Wvla-larger-than=1 -Wno-pointer-sign -Wcast-function-type -Wno-array-bounds -Wno-stringop-overflow -Wno-alloc-size-larger-than -Wimplicit-fallthrough=5 -Werror=date-time -Werror=incompatible-pointer-types -Werror=designated-init -Wenum-conversion -Wunused -Wno-unused-but-set-variable -Wno-unused-const-variable -Wno-packed-not-aligned -Wno-format-overflow -Wno-format-truncation -Wno-stringop-truncation -Wno-override-init -Wno-missing-field-initializers -Wno-type-limits -Wno-shift-negative-value -Wno-maybe-uninitialized -Wno-sign-compare -Wno-unused-parameter -g -gdwarf-5  -fsanitize=bounds-strict -fsanitize=shift -fsanitize=bool -fsanitize=enum    -DMODULE  -DKBUILD_BASENAME='"vled"' -DKBUILD_MODNAME='"vled"' -D__KBUILD_MODNAME=kmod_vled -c -o vled.o vled.c   ; /usr/src/linux-headers-6.17.0-35-generic/tools/objtool/objtool --hacks=jump_label --hacks=noinstr --hacks=skylake --retpoline --rethunk --sls --stackval --static-call --uaccess --prefix=16 --Werror   --module vled.o
+# cmd_gen_objtooldep vled.o
+   { echo ; echo 'vled.o: $(wildcard /usr/src/linux-headers-6.17.0-35-generic/tools/objtool/objtool)' ; } >> ./.vled.o.cmd
+# cmd_gen_symversions_c vled.o
+  if nm vled.o 2>/dev/null | grep -q ' __export_symbol_'; then  nm vled.o | sed -n 's/.* __export_symbol_\(.*\)//p' | /usr/src/linux-headers-6.17.0-35-generic/scripts/gendwarfksyms/gendwarfksyms   vled.o >> ./.vled.o.cmd; fi
+# cmd_mod vled.mod
+  printf '%s
+'   vled.o | awk '!x[$0]++ { print("./"$0) }' > vled.mod
+# cmd_gen_order modules.order
+  {   echo vled.o; :; } > modules.order
+sh /usr/src/linux-headers-6.17.0-35-generic/scripts/modules-check.sh modules.order
+make -f /usr/src/linux-headers-6.17.0-35-generic/scripts/Makefile.modpost
+# MODPOST Module.symvers
+   /usr/src/linux-headers-6.17.0-35-generic/scripts/mod/modpost -M -m -b -x -a      -o Module.symvers -T modules.order -i /usr/src/linux-headers-6.17.0-35-generic/Module.symvers -e 
+make -f /usr/src/linux-headers-6.17.0-35-generic/scripts/Makefile.modfinal
+# CC [M]  vled.mod.o
+  gcc-13 -Wp,-MMD,./.vled.mod.o.d -nostdinc -I/usr/src/linux-headers-6.17.0-35-generic/arch/x86/include -I/usr/src/linux-headers-6.17.0-35-generic/arch/x86/include/generated -I/usr/src/linux-headers-6.17.0-35-generic/include -I/usr/src/linux-headers-6.17.0-35-generic/include -I/usr/src/linux-headers-6.17.0-35-generic/arch/x86/include/uapi -I/usr/src/linux-headers-6.17.0-35-generic/arch/x86/include/generated/uapi -I/usr/src/linux-headers-6.17.0-35-generic/include/uapi -I/usr/src/linux-headers-6.17.0-35-generic/include/generated/uapi -include /usr/src/linux-headers-6.17.0-35-generic/include/linux/compiler-version.h -include /usr/src/linux-headers-6.17.0-35-generic/include/linux/kconfig.h -I/usr/src/linux-headers-6.17.0-35-generic/ubuntu/include -include /usr/src/linux-headers-6.17.0-35-generic/include/linux/compiler_types.h -D__KERNEL__ -std=gnu11 -fshort-wchar -funsigned-char -fno-common -fno-PIE -fno-strict-aliasing -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -mno-avx -mno-sse4a -fcf-protection=none -m64 -falign-jumps=1 -falign-loops=1 -mno-80387 -mno-fp-ret-in-387 -mpreferred-stack-boundary=3 -mskip-rax-setup -march=x86-64 -mtune=generic -mno-red-zone -mcmodel=kernel -mstack-protector-guard-reg=gs -mstack-protector-guard-symbol=__ref_stack_chk_guard -Wno-sign-compare -fno-asynchronous-unwind-tables -mindirect-branch=thunk-extern -mindirect-branch-register -mindirect-branch-cs-prefix -mfunction-return=thunk-extern -fno-jump-tables -mharden-sls=all -fpatchable-function-entry=16,16 -fno-delete-null-pointer-checks -O2 -fno-allow-store-data-races -fstack-protector-strong -fno-omit-frame-pointer -fno-optimize-sibling-calls -ftrivial-auto-var-init=zero -fno-stack-clash-protection -fzero-call-used-regs=used-gpr -pg -mrecord-mcount -mfentry -DCC_USING_FENTRY -falign-functions=16 -fstrict-flex-arrays=3 -fno-strict-overflow -fno-stack-check -fconserve-stack -fno-builtin-wcslen -Wall -Wextra -Wundef -Werror=implicit-function-declaration -Werror=implicit-int -Werror=return-type -Werror=strict-prototypes -Wno-format-security -Wno-trigraphs -Wno-frame-address -Wno-address-of-packed-member -Wmissing-declarations -Wmissing-prototypes -Wframe-larger-than=1024 -Wno-main -Wno-dangling-pointer -Wvla-larger-than=1 -Wno-pointer-sign -Wcast-function-type -Wno-array-bounds -Wno-stringop-overflow -Wno-alloc-size-larger-than -Wimplicit-fallthrough=5 -Werror=date-time -Werror=incompatible-pointer-types -Werror=designated-init -Wenum-conversion -Wunused -Wno-unused-but-set-variable -Wno-unused-const-variable -Wno-packed-not-aligned -Wno-format-overflow -Wno-format-truncation -Wno-stringop-truncation -Wno-override-init -Wno-missing-field-initializers -Wno-type-limits -Wno-shift-negative-value -Wno-maybe-uninitialized -Wno-sign-compare -Wno-unused-parameter -g -gdwarf-5  -fsanitize=bounds-strict -fsanitize=shift -fsanitize=bool -fsanitize=enum    -DMODULE  -DKBUILD_BASENAME='"vled.mod"' -DKBUILD_MODNAME='"vled"' -D__KBUILD_MODNAME=kmod_vled -c -o vled.mod.o vled.mod.c   ; /usr/src/linux-headers-6.17.0-35-generic/tools/objtool/objtool --hacks=jump_label --hacks=noinstr --hacks=skylake --retpoline --rethunk --sls --stackval --static-call --uaccess --prefix=16 --Werror   --module vled.mod.o
+# cmd_gen_objtooldep vled.mod.o
+   { echo ; echo 'vled.mod.o: $(wildcard /usr/src/linux-headers-6.17.0-35-generic/tools/objtool/objtool)' ; } >> ./.vled.mod.o.cmd
+# CC [M]  .module-common.o
+  gcc-13 -Wp,-MMD,./..module-common.o.d -nostdinc -I/usr/src/linux-headers-6.17.0-35-generic/arch/x86/include -I/usr/src/linux-headers-6.17.0-35-generic/arch/x86/include/generated -I/usr/src/linux-headers-6.17.0-35-generic/include -I/usr/src/linux-headers-6.17.0-35-generic/include -I/usr/src/linux-headers-6.17.0-35-generic/arch/x86/include/uapi -I/usr/src/linux-headers-6.17.0-35-generic/arch/x86/include/generated/uapi -I/usr/src/linux-headers-6.17.0-35-generic/include/uapi -I/usr/src/linux-headers-6.17.0-35-generic/include/generated/uapi -include /usr/src/linux-headers-6.17.0-35-generic/include/linux/compiler-version.h -include /usr/src/linux-headers-6.17.0-35-generic/include/linux/kconfig.h -I/usr/src/linux-headers-6.17.0-35-generic/ubuntu/include -include /usr/src/linux-headers-6.17.0-35-generic/include/linux/compiler_types.h -D__KERNEL__ -std=gnu11 -fshort-wchar -funsigned-char -fno-common -fno-PIE -fno-strict-aliasing -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -mno-avx -mno-sse4a -fcf-protection=none -m64 -falign-jumps=1 -falign-loops=1 -mno-80387 -mno-fp-ret-in-387 -mpreferred-stack-boundary=3 -mskip-rax-setup -march=x86-64 -mtune=generic -mno-red-zone -mcmodel=kernel -mstack-protector-guard-reg=gs -mstack-protector-guard-symbol=__ref_stack_chk_guard -Wno-sign-compare -fno-asynchronous-unwind-tables -mindirect-branch=thunk-extern -mindirect-branch-register -mindirect-branch-cs-prefix -mfunction-return=thunk-extern -fno-jump-tables -mharden-sls=all -fpatchable-function-entry=16,16 -fno-delete-null-pointer-checks -O2 -fno-allow-store-data-races -fstack-protector-strong -fno-omit-frame-pointer -fno-optimize-sibling-calls -ftrivial-auto-var-init=zero -fno-stack-clash-protection -fzero-call-used-regs=used-gpr -pg -mrecord-mcount -mfentry -DCC_USING_FENTRY -falign-functions=16 -fstrict-flex-arrays=3 -fno-strict-overflow -fno-stack-check -fconserve-stack -fno-builtin-wcslen -Wall -Wextra -Wundef -Werror=implicit-function-declaration -Werror=implicit-int -Werror=return-type -Werror=strict-prototypes -Wno-format-security -Wno-trigraphs -Wno-frame-address -Wno-address-of-packed-member -Wmissing-declarations -Wmissing-prototypes -Wframe-larger-than=1024 -Wno-main -Wno-dangling-pointer -Wvla-larger-than=1 -Wno-pointer-sign -Wcast-function-type -Wno-array-bounds -Wno-stringop-overflow -Wno-alloc-size-larger-than -Wimplicit-fallthrough=5 -Werror=date-time -Werror=incompatible-pointer-types -Werror=designated-init -Wenum-conversion -Wunused -Wno-unused-but-set-variable -Wno-unused-const-variable -Wno-packed-not-aligned -Wno-format-overflow -Wno-format-truncation -Wno-stringop-truncation -Wno-override-init -Wno-missing-field-initializers -Wno-type-limits -Wno-shift-negative-value -Wno-maybe-uninitialized -Wno-sign-compare -Wno-unused-parameter -g -gdwarf-5  -fsanitize=bounds-strict -fsanitize=shift -fsanitize=bool -fsanitize=enum    -DMODULE  -DKBUILD_BASENAME='".module_common"' -DKBUILD_MODNAME='".module_common.o"' -D__KBUILD_MODNAME=kmod_.module_common.o -c -o .module-common.o /usr/src/linux-headers-6.17.0-35-generic/scripts/module-common.c   ; /usr/src/linux-headers-6.17.0-35-generic/tools/objtool/objtool --hacks=jump_label --hacks=noinstr --hacks=skylake --retpoline --rethunk --sls --stackval --static-call --uaccess --prefix=16 --Werror   --module .module-common.o
+# cmd_gen_objtooldep .module-common.o
+   { echo ; echo '.module-common.o: $(wildcard /usr/src/linux-headers-6.17.0-35-generic/tools/objtool/objtool)' ; } >> ./..module-common.o.cmd
+# LD [M]  vled.ko
+  ld -r -m elf_x86_64 -z noexecstack --no-warn-rwx-segments --build-id=sha1  -T /usr/src/linux-headers-6.17.0-35-generic/scripts/module.lds -o vled.ko vled.o vled.mod.o .module-common.o
+# BTF [M] vled.ko
+  if [ ! -f /usr/src/linux-headers-6.17.0-35-generic/vmlinux ]; then printf "Skipping BTF generation for %s due to unavailability of vmlinux
+" vled.ko 1>&2; else LLVM_OBJCOPY="objcopy" pahole -J --btf_gen_floats -j --skip_encoding_btf_inconsistent_proto --btf_gen_optimized --lang_exclude=rust  --btf_base /usr/src/linux-headers-6.17.0-35-generic/vmlinux vled.ko; /usr/src/linux-headers-6.17.0-35-generic/tools/bpf/resolve_btfids/resolve_btfids -b /usr/src/linux-headers-6.17.0-35-generic/vmlinux vled.ko; fi;
+Skipping BTF generation for vled.ko due to unavailability of vmlinux
+make[2]: 离开目录“/home/siqi/siqi_ws/V-LED/driver”
+make[1]: 离开目录“/usr/src/linux-headers-6.17.0-35-generic”
+make: 离开目录“/home/siqi/siqi_ws/V-LED/driver”
+make: 进入目录“/home/siqi/siqi_ws/V-LED/tools”
+rm -f vled_cli vled_bridge vled_fd_probe
+make: 离开目录“/home/siqi/siqi_ws/V-LED/tools”
+make: 进入目录“/home/siqi/siqi_ws/V-LED/tools”
+cc -Wall -Wextra -Werror -O2 -o vled_cli vled_cli.c
+cc -Wall -Wextra -Werror -O2 -o vled_bridge vled_bridge.c
+cc -Wall -Wextra -Werror -O2 -o vled_fd_probe vled_fd_probe.c
+make: 离开目录“/home/siqi/siqi_ws/V-LED/tools”
+== bridge black-box acceptance ==
+PASS T-BRIDGE-01..04 validation, UDP delivery and SIGTERM cleanup
+== load module and validate device ==
+crw-rw-rw- 1 root root 239, 0  7月 12 15:29 /dev/vled
+vled                   24576  0
+filename:       /home/siqi/siqi_ws/V-LED/driver/vled.ko
+description:    Virtual LED Linux character device driver
+author:         VLED Team Member A
+license:        GPL
+srcversion:     653C554B60173C369C367D0
+depends:        
+name:           vled
+retpoline:      Y
+vermagic:       6.17.0-35-generic SMP preempt mod_unload modversions 
+== P1 regression probe ==
+VLED P1 probe: device=/dev/vled page_size=4096
+PASS T-BUF-01    
+PASS T-VERSION   
+PASS T-FOPS-05   
+PASS T-BUF-03    
+PASS T-BUF-04    
+PASS T-BUF-02    
+PASS T-BUF-05    
+PASS T-BUF-06    
+PASS T-FOPS-04   
+PASS T-ROLLBACK  
+PASS T-FD-01     
+PASS T-READ-03   
+PASS T-FD-03     
+PASS T-FD-04     
+PASS T-JSON-02..03
+VLED P1 probe: all checks passed
+== P3 business and concurrency acceptance ==
+FAIL T-CMD: '': expected errno 22, write succeeded
+VLED P3 verify: device=/dev/vled page_size=4096
+PASS T-CLI
