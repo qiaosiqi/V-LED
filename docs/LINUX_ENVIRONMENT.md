@@ -1,6 +1,6 @@
 # 目标 Linux / VMware 环境记录
 
-> 状态：`P1_TARGET_LINUX_VERIFIED / P3_TARGET_VERIFIED / P4_TARGET_VERIFIED / P5_TARGET_VERIFIED`（P5 证据见 `evidence/20260712-2127-ubuntu-6.17.0-35-generic-p5/`）
+> 状态：`P1_TARGET_LINUX_VERIFIED / P3_TARGET_VERIFIED / P4_TARGET_VERIFIED / P5_TARGET_VERIFIED / P6_TARGET_VERIFIED`（P6 结果见 `evidence/20260712-2147-ubuntu-6.17.0-35-generic-p6/`）
 >
 > 用途：冻结目标 Linux 的构建、加载、联网和截图条件。请不要填写密码、GitHub Token、SSH 私钥、公网 IP 或其他凭据。
 
