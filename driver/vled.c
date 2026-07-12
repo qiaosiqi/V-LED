@@ -99,7 +99,7 @@ static bool vled_valid_color(int value)
 	return value >= 0 && value <= 255;
 }
 
-static int vled_parse_command(const struct vled_state *current,
+static int vled_parse_command(const struct vled_state *current_state,
 			      char *raw_command, struct vled_state *next,
 			      bool *changed)
 {
@@ -112,7 +112,7 @@ static int vled_parse_command(const struct vled_state *current,
 	char mode[VLED_MODE_MAX];
 	char tail;
 
-	*next = *current;
+	*next = *current_state;
 	*changed = false;
 
 	if (*command == '\0')
@@ -433,7 +433,6 @@ static const struct file_operations vled_fops = {
 	.read = vled_read,
 	.write = vled_write,
 	.release = vled_release,
-	.llseek = no_llseek,
 };
 
 static int __init vled_init(void)
