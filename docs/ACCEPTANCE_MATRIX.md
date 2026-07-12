@@ -1,6 +1,6 @@
 # V-LED 实验四可执行验收矩阵
 
-> 状态：`SPEC_FROZEN / P1_TARGET_LINUX_PASS / P2_WINDOWS_PASS / P3_TARGET_PASS / P4_TARGET_EVIDENCE_PASS / P5_WINDOWS_STATIC_PASS / P5_NOT_RUN_TARGET_LINUX`
+> 状态：`SPEC_FROZEN / P1_TARGET_LINUX_PASS / P2_WINDOWS_PASS / P3_TARGET_PASS / P4_TARGET_EVIDENCE_PASS / P5_TARGET_PASS`
 >
 > 本文档冻结“应该实现什么、怎样证明实现真实有效”。它不是测试结果。
 > 只有目标 Linux 原始日志存在时，项目状态才可从 `NOT_RUN_ON_TARGET_LINUX` 改为 `PASS` 或 `FAIL`。
@@ -260,6 +260,11 @@ P1–P4 全回归通过前，P5 仍不标记为 PASS。
 旧 JSON 后继续读取并拼接下一版本。修复批次在累计内容首次通过完整状态协议校验
 时立即返回，并用两个连续版本的 mock read 回归证明不会越过快照边界。
 
+最终明确提交 `e142f2001315737b314c8800ac8800d511bbe6ab` 在目标 Linux 上通过
+P1 probe、T-CLI/T-CMD/T-CON、三轮生命周期、T-POLL-01..08 和内核日志检查。
+`full_verify exit=0`、`poll_probe exit=0`；证据见
+`docs/evidence/20260712-2127-ubuntu-6.17.0-35-generic-p5/`。
+
 | ID | Given/When | Then |
 |---|---|---|
 | T-POLL-01 | 新 FD 初次 poll | 当前状态可读 |
@@ -289,3 +294,4 @@ P1–P4 全回归通过前，P5 仍不标记为 PASS。
 | 20260712-1427-p1 | `d8c1c0d` | Ubuntu 24.04.4 / 6.17.0-35-generic / GCC 13.3 | P1 PAGE_SIZE、版本、回滚、多 FD、快照、JSON、装卸 | `PASS` | `docs/evidence/20260712-1427-ubuntu-6.17.0-35-generic-p1/` |
 | 20260712-1544-p3 | `b11d5c7` | Ubuntu 24.04.4 / 6.17.0-35 / GCC 13.3 / Python 3.12.3；Windows GUI | P3 构建、业务、边界、并发、生命周期、bridge 与跨机 UDP | `PASS / P3_TARGET_PASS` | `docs/evidence/20260712-1544-ubuntu-windows-p3/` |
 | 20260712-1653-p4 | `abad494` | Ubuntu 24.04.4 / 6.17.0-35 / GCC 13.3 / Python 3.12.3；Windows GUI | 00–08 正式分项日志、退出码、内核区间、Linux/Windows 截图 | `PASS / P4_TARGET_EVIDENCE_PASS` | `docs/evidence/20260712-1653-ubuntu-6.17.0-35-generic-p4/` |
+| 20260712-2127-p5 | `e142f20` | Ubuntu 24.04.4 / 6.17.0-35 / GCC 13.3 / Python 3.12.3 | P1–P4 回归、T-POLL-01..08、三轮生命周期、内核日志 | `PASS / P5_TARGET_PASS` | `docs/evidence/20260712-2127-ubuntu-6.17.0-35-generic-p5/` |
