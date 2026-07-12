@@ -1,6 +1,6 @@
 # 目标 Linux / VMware 环境记录
 
-> 状态：`CONFIRMED_FOR_P0`（剩余未知项均为非阻塞项，正式 P4 运行前复核）
+> 状态：`P1_TARGET_LINUX_VERIFIED`（剩余未知项均为非阻塞项，正式 P4 运行前复核）
 >
 > 用途：冻结目标 Linux 的构建、加载、联网和截图条件。请不要填写密码、GitHub Token、SSH 私钥、公网 IP 或其他凭据。
 
@@ -40,9 +40,9 @@
 | Linux 端仓库绝对路径 | `/home/siqi/siqi_ws/V-LED`（由提示符 `~/siqi_ws/V-LED` 推定，待 `pwd` 确认） |
 | remote URL 类型（HTTPS/SSH，仅写类型） | HTTPS：公开仓库 `https://github.com/qiaosiqi/V-LED.git` |
 | 能否 `git fetch origin` | 是；2026-07-12 已成功 fetch |
-| 当前分支 | `integration`，跟踪 `origin/integration` |
-| 当前提交 `git rev-parse HEAD` | `f1fb1916af021a4d8b43be0d1466e85b324a14da` |
-| 是否存在 Linux 端未提交改动 | 是；均为未跟踪构建产物、`get_env.sh` 和已编译用户态工具，详情见第 3.1 节 |
+| 当前分支 | `integration-promote-try`，跟踪 `origin/integration-promote-try` |
+| P1 受测提交 `git rev-parse HEAD` | `d8c1c0dcd451c78a3df4d96730267fad16d89e4c` |
+| 是否存在 Linux 端未提交改动 | 是；均为 P1 未跟踪构建产物、`get_env.sh`、`get_env_2.sh` 和已编译用户态工具；无待提交源码修改 |
 
 同步规则：
 
@@ -59,9 +59,9 @@
 | 引用 | 提交 |
 |---|---|
 | `origin/integration` | `a192f2c0c86f3a3254c4ca2df779b2beb735ba0d` |
-| `origin/integration-promote-try` | `a40be52fa2cc06f968732058709eade0dbf56766` |
+| `origin/integration-promote-try`（P1 受测时） | `d8c1c0dcd451c78a3df4d96730267fad16d89e4c` |
 
-Linux 当前工作分支仍是 `integration@f1fb191`，尚未切换到目标分支。
+Linux 已切换到 `integration-promote-try`，P1 在明确提交 `d8c1c0d` 上执行。
 
 ### 3.2 当前 Linux 工作树未跟踪内容
 
@@ -87,6 +87,10 @@ get_env.sh
 tools/vled_bridge
 tools/vled_cli
 ```
+
+P1 最终环境记录还显示新增 `get_env_2.sh` 和 `tools/vled_fd_probe`，其余内容为
+重新构建产生的同类内核产物。它们均为未跟踪测试文件；受测源码与
+`origin/integration-promote-try` 一致。
 
 处理规则：
 
@@ -218,10 +222,11 @@ lsmod | grep '^vled' || echo 'vled module: NOT LOADED'
 |---|---|---|---|
 | 2026-07-12 | 用户粘贴 `get_env.sh` 输出 | 核心 OS、内核、headers、工具链、Git、Python 和 Linux IP 已记录；仍待补充网络模式、权限、安全启动和截图策略 | Codex |
 | 2026-07-12 | 用户粘贴 `get_env_2.sh` 输出和 3 张截图 | NAT、Windows VMnet8 IP、ping 失败、时区、BIOS/lockdown、Git refs、旧模块加载状态和证据策略已记录；P0 环境信息闭环 | Codex |
+| 2026-07-12 | P1 两个原始日志归档及 Linux 终端输出 | `d8c1c0d` 零警告构建、tools 严格构建、P1 探针全通过、模块注册/注销干净；失败和中间警告证据保留 | Codex |
 
 ## 10. 首个 Linux 测试批次的环境前置动作
 
-以下动作属于未来 P1/P3 测试准备，不在 P0 中立即执行：
+以下动作中的 P1 部分已于 2026-07-12 完成；P3/P4 正式运行前按同一原则复核：
 
 1. 记录当前 `lsmod` 和 `/dev/vled`，使用需要密码的 sudo 卸载旧版 `vled` 模块。
 2. 确认旧模块卸载后 `/dev/vled` 消失。

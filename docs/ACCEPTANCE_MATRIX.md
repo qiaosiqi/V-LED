@@ -1,6 +1,6 @@
 # V-LED 实验四可执行验收矩阵
 
-> 状态：`SPEC_FROZEN / P1_IMPLEMENTED_NOT_RUN / P2_WINDOWS_AUTOMATED_PASS_GUI_REVIEW_PENDING / NOT_RUN_ON_TARGET_LINUX`
+> 状态：`SPEC_FROZEN / P1_TARGET_LINUX_PASS / P2_WINDOWS_AUTOMATED_PASS_GUI_REVIEW_PENDING`
 >
 > 本文档冻结“应该实现什么、怎样证明实现真实有效”。它不是测试结果。
 > 只有目标 Linux 原始日志存在时，项目状态才可从 `NOT_RUN_ON_TARGET_LINUX` 改为 `PASS` 或 `FAIL`。
@@ -87,8 +87,8 @@
 | PDF4-05 | 自动创建设备文件 | `class_create/device_create` | `T-LIFE-02..03` | `/dev/vled` 出现/消失 | `NOT_RUN_ON_TARGET_LINUX` |
 | PDF4-06 | 用户写入，内核接收并处理 | `vled_write`/命令解析 | `T-CMD-*` | 功能日志、状态 JSON | `NOT_RUN_ON_TARGET_LINUX` |
 | PDF4-07 | 用户读取内核返回状态 | `vled_read`/JSON | `T-READ-*` | JSON 解析结果 | `NOT_RUN_ON_TARGET_LINUX` |
-| PDF4-08 | 内置一页大小内核缓冲区 | PAGE_SIZE 共享状态缓冲区 | `T-BUF-*` | 边界日志、源码/构建 | `IMPLEMENTED_NOT_RUN` |
-| PDF4-09 | 多进程同开、独立读写偏移 | per-open context | `T-FD-*` | 双 FD 探针、并发日志 | `IMPLEMENTED_NOT_RUN` |
+| PDF4-08 | 内置一页大小内核缓冲区 | PAGE_SIZE 共享状态缓冲区 | `T-BUF-*` | 边界日志、源码/构建 | `PASS` |
+| PDF4-09 | 多进程同开、独立读写偏移 | per-open context | `T-FD-*` | 双 FD 探针、并发日志 | `PASS` |
 | PDF4-10 | 动态装卸和节点注册测试 | 生命周期脚本 | `T-LIFE-*` | 完整生命周期日志 | `NOT_RUN_ON_TARGET_LINUX` |
 
 ## 4. 驱动生命周期验收
@@ -260,4 +260,5 @@
 | 运行编号 | Git 提交 | Linux 环境 | 测试范围 | 结果 | 原始证据目录 |
 |---|---|---|---|---|---|
 | Windows-20260712 | `47dadca` | Windows Python 3.12.9 | P2 无 GUI 自动测试 | `AUTOMATED_PASS / GUI_REVIEW_PENDING` | 本轮终端输出，尚未固化到 P4 证据目录 |
-| 待运行 | 待定 | 见 `LINUX_ENVIRONMENT.md` | P1–P3 | `NOT_RUN_ON_TARGET_LINUX` | 待创建 |
+| 20260712-1427-p1 | `d8c1c0d` | Ubuntu 24.04.4 / 6.17.0-35-generic / GCC 13.3 | P1 PAGE_SIZE、版本、回滚、多 FD、快照、JSON、装卸 | `PASS` | `docs/evidence/20260712-1427-ubuntu-6.17.0-35-generic-p1/` |
+| 待运行 | 待定 | 见 `LINUX_ENVIRONMENT.md` | P2 GUI、P3 及后续 | `NOT_RUN_ON_TARGET_LINUX` | 待创建 |
