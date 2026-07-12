@@ -1,6 +1,6 @@
 # V-LED 实验四可执行验收矩阵
 
-> 状态：`SPEC_FROZEN / NOT_IMPLEMENTED / NOT_RUN_ON_TARGET_LINUX`
+> 状态：`SPEC_FROZEN / P1_IMPLEMENTED_NOT_RUN / P2_WINDOWS_AUTOMATED_PASS_GUI_REVIEW_PENDING / NOT_RUN_ON_TARGET_LINUX`
 >
 > 本文档冻结“应该实现什么、怎样证明实现真实有效”。它不是测试结果。
 > 只有目标 Linux 原始日志存在时，项目状态才可从 `NOT_RUN_ON_TARGET_LINUX` 改为 `PASS` 或 `FAIL`。
@@ -87,8 +87,8 @@
 | PDF4-05 | 自动创建设备文件 | `class_create/device_create` | `T-LIFE-02..03` | `/dev/vled` 出现/消失 | `NOT_RUN_ON_TARGET_LINUX` |
 | PDF4-06 | 用户写入，内核接收并处理 | `vled_write`/命令解析 | `T-CMD-*` | 功能日志、状态 JSON | `NOT_RUN_ON_TARGET_LINUX` |
 | PDF4-07 | 用户读取内核返回状态 | `vled_read`/JSON | `T-READ-*` | JSON 解析结果 | `NOT_RUN_ON_TARGET_LINUX` |
-| PDF4-08 | 内置一页大小内核缓冲区 | PAGE_SIZE 共享状态缓冲区 | `T-BUF-*` | 边界日志、源码/构建 | `NOT_IMPLEMENTED` |
-| PDF4-09 | 多进程同开、独立读写偏移 | per-open context | `T-FD-*` | 双 FD 探针、并发日志 | `NOT_IMPLEMENTED` |
+| PDF4-08 | 内置一页大小内核缓冲区 | PAGE_SIZE 共享状态缓冲区 | `T-BUF-*` | 边界日志、源码/构建 | `IMPLEMENTED_NOT_RUN` |
+| PDF4-09 | 多进程同开、独立读写偏移 | per-open context | `T-FD-*` | 双 FD 探针、并发日志 | `IMPLEMENTED_NOT_RUN` |
 | PDF4-10 | 动态装卸和节点注册测试 | 生命周期脚本 | `T-LIFE-*` | 完整生命周期日志 | `NOT_RUN_ON_TARGET_LINUX` |
 
 ## 4. 驱动生命周期验收
@@ -223,6 +223,15 @@
 | T-SIM-08 | 日志长时间运行 | 日志数量有上限，内存不无界增长 |
 | T-SIM-09 | 关闭窗口 | 停止事件生效，socket/线程可及时结束 |
 
+### 10.1 P2 Windows 检查记录（2026-07-12）
+
+- 实现提交：`4d19398`；无 GUI 测试提交：`866023a`；说明提交：`47dadca`。
+- `python -m unittest discover -s simulator/tests -v` 在 Windows Python 3.12.9 下运行 12 项，全部通过。
+- 测试包含真实 `127.0.0.1` 临时 UDP 端口收发、无效 JSON 拒绝、socket 关闭和非 daemon 接收线程及时退出。
+- 临时把 `blink` 加入允许模式后，非法 mode 负面测试以退出码 1 失败；恢复正确实现后 12 项再次全部通过。mutation 未提交。
+- GUI 进程能够启动并创建“虚拟 LED 模拟器”窗口；自动窗口捕获却返回了其他应用画面，因此没有对不一致句柄执行输入，人工视觉/交互门禁保持 `GUI_REVIEW_PENDING`。
+- 上述结果只证明 Windows 自动检查，不替代 P3/P4 的跨机 UDP 和目标 Linux 证据。
+
 ## 11. P5 poll + wait queue 扩展验收
 
 | ID | Given/When | Then |
@@ -250,4 +259,5 @@
 
 | 运行编号 | Git 提交 | Linux 环境 | 测试范围 | 结果 | 原始证据目录 |
 |---|---|---|---|---|---|
+| Windows-20260712 | `47dadca` | Windows Python 3.12.9 | P2 无 GUI 自动测试 | `AUTOMATED_PASS / GUI_REVIEW_PENDING` | 本轮终端输出，尚未固化到 P4 证据目录 |
 | 待运行 | 待定 | 见 `LINUX_ENVIRONMENT.md` | P1–P3 | `NOT_RUN_ON_TARGET_LINUX` | 待创建 |
