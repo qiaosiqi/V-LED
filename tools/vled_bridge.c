@@ -38,6 +38,8 @@
 #define DEFAULT_PORT 9000
 #define DEFAULT_INTERVAL_MS 500
 #define BUF_SIZE 4096
+#define MAX_DIMENSION 128
+#define MAX_LED_CELLS 4096
 
 static volatile sig_atomic_t running = 1;
 
@@ -65,14 +67,15 @@ static int parse_port(const char *text)
     return (int)port;
 }
 
-static unsigned int parse_interval_ms(const char *text)
+static int parse_interval_ms(const char *text, unsigned int *result)
 {
     char *end = NULL;
     unsigned long value = strtoul(text, &end, 10);
-    if (end == text || *end != '\0' || value == 0) {
-        return DEFAULT_INTERVAL_MS;
+    if (end == text || *end != '\0' || value == 0 || value > 3600000UL) {
+        return -1;
     }
-    return (unsigned int)value;
+    *result = (unsigned int)value;
+    return 0;
 }
 
 static int open_udp_socket(const char *ip, int port, struct sockaddr_in *addr)
@@ -118,11 +121,94 @@ static ssize_t read_vled_once(const char *dev, char *buf, size_t size)
     return n;
 }
 
-static int looks_like_state_json(const char *payload)
+static int consume_literal(const char **cursor, const char *literal)
 {
-    return strchr(payload, '{') != NULL &&
-           strstr(payload, "\"type\"") != NULL &&
-           strstr(payload, "\"state\"") != NULL;
+    size_t size = strlen(literal);
+
+    if (strncmp(*cursor, literal, size) != 0)
+        return 0;
+    *cursor += size;
+    return 1;
+}
+
+static int consume_uint(const char **cursor, unsigned long *value)
+{
+    char *end = NULL;
+
+    if (**cursor < '0' || **cursor > '9')
+        return 0;
+    errno = 0;
+    *value = strtoul(*cursor, &end, 10);
+    if (errno || end == *cursor)
+        return 0;
+    *cursor = end;
+    return 1;
+}
+
+static int consume_json_string(const char **cursor)
+{
+    size_t decoded_bytes = 0;
+
+    while (**cursor && **cursor != '"') {
+        unsigned char byte = (unsigned char)**cursor;
+
+        if (byte < 0x20)
+            return 0;
+        if (byte == '\\') {
+            (*cursor)++;
+            if (!strchr("\"\\/bfnrt", **cursor))
+                return 0;
+        }
+        (*cursor)++;
+        decoded_bytes++;
+        if (decoded_bytes > 1023)
+            return 0;
+    }
+    if (**cursor != '"')
+        return 0;
+    (*cursor)++;
+    return 1;
+}
+
+/* Validate the exact canonical state shape emitted by the VLED driver. */
+static int validate_state_json(const char *payload)
+{
+    const char *cursor = payload;
+    unsigned long width, height, red, green, blue, brightness, version;
+    const char *mode;
+
+    if (!consume_literal(&cursor, "{\"type\":\"state\",\"width\":" ) ||
+        !consume_uint(&cursor, &width) ||
+        !consume_literal(&cursor, ",\"height\":" ) ||
+        !consume_uint(&cursor, &height) ||
+        !consume_literal(&cursor, ",\"text\":\"" ) ||
+        !consume_json_string(&cursor) ||
+        !consume_literal(&cursor, ",\"color\":[" ) ||
+        !consume_uint(&cursor, &red) || !consume_literal(&cursor, ",") ||
+        !consume_uint(&cursor, &green) || !consume_literal(&cursor, ",") ||
+        !consume_uint(&cursor, &blue) ||
+        !consume_literal(&cursor, "],\"brightness\":" ) ||
+        !consume_uint(&cursor, &brightness) ||
+        !consume_literal(&cursor, ",\"mode\":\"" ))
+        return 0;
+
+    mode = cursor;
+    while (*cursor && *cursor != '"')
+        cursor++;
+    if (*cursor != '"')
+        return 0;
+    if (!((size_t)(cursor - mode) == 6 && strncmp(mode, "static", 6) == 0) &&
+        !((size_t)(cursor - mode) == 6 && strncmp(mode, "scroll", 6) == 0))
+        return 0;
+    cursor++;
+    if (!consume_literal(&cursor, ",\"version\":" ) ||
+        !consume_uint(&cursor, &version) || !consume_literal(&cursor, "}"))
+        return 0;
+
+    return *cursor == '\0' && width >= 1 && width <= MAX_DIMENSION &&
+           height >= 1 && height <= MAX_DIMENSION &&
+           width * height <= MAX_LED_CELLS && red <= 255 && green <= 255 &&
+           blue <= 255 && brightness <= 100;
 }
 
 int main(int argc, char **argv)
@@ -135,7 +221,7 @@ int main(int argc, char **argv)
     unsigned int interval_ms = DEFAULT_INTERVAL_MS;
     char buf[BUF_SIZE + 1];
 
-    if (argc < 2) {
+    if (argc < 2 || argc > 5) {
         usage(argv[0]);
         return 1;
     }
@@ -152,7 +238,10 @@ int main(int argc, char **argv)
         dev = argv[3];
     }
     if (argc >= 5) {
-        interval_ms = parse_interval_ms(argv[4]);
+        if (parse_interval_ms(argv[4], &interval_ms) != 0) {
+            fprintf(stderr, "invalid interval_ms: %s\n", argv[4]);
+            return 1;
+        }
     }
 
     signal(SIGINT, on_signal);
@@ -169,7 +258,7 @@ int main(int argc, char **argv)
     while (running) {
         ssize_t n = read_vled_once(dev, buf, sizeof(buf));
         if (n > 0) {
-            if (!looks_like_state_json(buf)) {
+            if (!validate_state_json(buf)) {
                 fprintf(stderr, "skip non-state payload: %s\n", buf);
             } else if (sendto(sock, buf, (size_t)n, 0,
                               (const struct sockaddr *)&udp_addr,

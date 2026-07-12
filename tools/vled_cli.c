@@ -84,6 +84,12 @@ static int write_device(const char *dev, const char *text)
         return 1;
     }
 
+    if ((size_t)n != len) {
+        fprintf(stderr, "short write: expected %zu bytes, wrote %zd\n", len, n);
+        close(fd);
+        return 1;
+    }
+
     printf("wrote %zd bytes to %s\n", n, dev);
     close(fd);
     return 0;
@@ -108,11 +114,15 @@ int main(int argc, char **argv)
     }
 
     if (strcmp(argv[1], "read") == 0) {
+        if (argc > 3) {
+            usage(argv[0]);
+            return 1;
+        }
         return read_device(device_arg(argc, argv, 2));
     }
 
     if (strcmp(argv[1], "write") == 0) {
-        if (argc < 3) {
+        if (argc < 3 || argc > 4) {
             usage(argv[0]);
             return 1;
         }
@@ -123,10 +133,15 @@ int main(int argc, char **argv)
         unsigned int interval = 1;
         const char *dev = DEFAULT_DEV;
 
+        if (argc > 4) {
+            usage(argv[0]);
+            return 1;
+        }
         if (argc >= 3) {
             char *end = NULL;
             unsigned long parsed = strtoul(argv[2], &end, 10);
-            if (end == argv[2] || *end != '\0' || parsed == 0) {
+            if (end == argv[2] || *end != '\0' || parsed == 0 ||
+                parsed > 86400) {
                 fprintf(stderr, "invalid interval: %s\n", argv[2]);
                 return 1;
             }
