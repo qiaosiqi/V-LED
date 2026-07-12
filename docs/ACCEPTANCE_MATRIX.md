@@ -1,6 +1,6 @@
 # V-LED 实验四可执行验收矩阵
 
-> 状态：`SPEC_FROZEN / P1_TARGET_LINUX_PASS / P2_WINDOWS_PASS / P3_TARGET_PASS / P4_NOT_AUTHORIZED`
+> 状态：`SPEC_FROZEN / P1_TARGET_LINUX_PASS / P2_WINDOWS_PASS / P3_TARGET_PASS / P4_AUTHORIZED_NOT_RUN`
 >
 > 本文档冻结“应该实现什么、怎样证明实现真实有效”。它不是测试结果。
 > 只有目标 Linux 原始日志存在时，项目状态才可从 `NOT_RUN_ON_TARGET_LINUX` 改为 `PASS` 或 `FAIL`。

@@ -1,6 +1,6 @@
 # 目标 Linux / VMware 环境记录
 
-> 状态：`P1_TARGET_LINUX_VERIFIED / P3_TARGET_VERIFIED`（P3 证据见 `evidence/20260712-1544-ubuntu-windows-p3/`）
+> 状态：`P1_TARGET_LINUX_VERIFIED / P3_TARGET_VERIFIED / P4_AUTHORIZED_NOT_RUN`（P4 见 `P4_EVIDENCE_RUNBOOK.md`）
 >
 > 用途：冻结目标 Linux 的构建、加载、联网和截图条件。请不要填写密码、GitHub Token、SSH 私钥、公网 IP 或其他凭据。
 

@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-PAGE_SIZE = os.sysconf("SC_PAGE_SIZE")
+PAGE_SIZE = os.sysconf("SC_PAGE_SIZE") if hasattr(os, "sysconf") else 4096
 REQUIRED_FIELDS = {
     "type", "width", "height", "text", "color", "brightness", "mode", "version"
 }
@@ -22,6 +22,18 @@ REQUIRED_FIELDS = {
 
 class Failure(RuntimeError):
     pass
+
+
+def parse_groups(text: str) -> list[str]:
+    groups = text.split(",")
+    valid = {"cli", "commands", "concurrency"}
+    if not groups or any(group not in valid for group in groups):
+        raise argparse.ArgumentTypeError(
+            "groups must contain only cli,commands,concurrency"
+        )
+    if len(set(groups)) != len(groups):
+        raise argparse.ArgumentTypeError("groups must not contain duplicates")
+    return groups
 
 
 def check(condition: bool, message: str) -> None:
@@ -207,13 +219,21 @@ def main() -> int:
     parser.add_argument("--device", default="/dev/vled")
     parser.add_argument("--cli", default=str(Path(__file__).with_name("vled_cli")))
     parser.add_argument("--iterations", type=int, default=200)
+    parser.add_argument(
+        "--groups", type=parse_groups, default="cli,commands,concurrency",
+        help="comma-separated subset of: cli,commands,concurrency",
+    )
     args = parser.parse_args()
     if args.iterations < 1 or args.iterations > 10000:
         parser.error("--iterations must be in 1..10000")
 
-    tests = (("T-CLI", lambda: test_cli(Path(args.cli), args.device)),
-             ("T-CMD", lambda: test_commands(args.device)),
-             ("T-CON", lambda: test_concurrency(args.device, args.iterations)))
+    requested = args.groups
+    available = {
+        "cli": ("T-CLI", lambda: test_cli(Path(args.cli), args.device)),
+        "commands": ("T-CMD", lambda: test_commands(args.device)),
+        "concurrency": ("T-CON", lambda: test_concurrency(args.device, args.iterations)),
+    }
+    tests = [available[group] for group in requested]
     print(f"VLED P3 verify: device={args.device} page_size={PAGE_SIZE}")
     for test_id, test in tests:
         try:
