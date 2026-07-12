@@ -1,0 +1,38 @@
+cycle=1
+crw-rw-rw- 1 root root 239, 0  7月 12 17:04 /dev/vled
+vled                   24576  0
+filename:       /home/siqi/siqi_ws/V-LED/driver/vled.ko
+description:    Virtual LED Linux character device driver
+author:         VLED Team Member A
+license:        GPL
+srcversion:     653C554B60173C369C367D0
+depends:        
+name:           vled
+retpoline:      Y
+vermagic:       6.17.0-35-generic SMP preempt mod_unload modversions 
+cycle=2
+crw-rw-rw- 1 root root 239, 0  7月 12 17:04 /dev/vled
+vled                   24576  0
+filename:       /home/siqi/siqi_ws/V-LED/driver/vled.ko
+description:    Virtual LED Linux character device driver
+author:         VLED Team Member A
+license:        GPL
+srcversion:     653C554B60173C369C367D0
+depends:        
+name:           vled
+retpoline:      Y
+vermagic:       6.17.0-35-generic SMP preempt mod_unload modversions 
+cycle=3
+crw-rw-rw- 1 root root 239, 0  7月 12 17:04 /dev/vled
+vled                   24576  0
+filename:       /home/siqi/siqi_ws/V-LED/driver/vled.ko
+description:    Virtual LED Linux character device driver
+author:         VLED Team Member A
+license:        GPL
+srcversion:     653C554B60173C369C367D0
+depends:        
+name:           vled
+retpoline:      Y
+vermagic:       6.17.0-35-generic SMP preempt mod_unload modversions 
+vled unloaded
+/dev/vled removed

@@ -1,0 +1,73 @@
+> TEXT VLED P3 Demo
+wrote 17 bytes to /dev/vled
+{"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[67,151,61],"brightness":96,"mode":"scroll","version":1506}
+> COLOR 255 0 0
+wrote 13 bytes to /dev/vled
+{"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[255,0,0],"brightness":96,"mode":"scroll","version":1507}
+> BRIGHTNESS 80
+wrote 13 bytes to /dev/vled
+{"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[255,0,0],"brightness":80,"mode":"scroll","version":1508}
+> MODE scroll
+wrote 11 bytes to /dev/vled
+{"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[255,0,0],"brightness":80,"mode":"scroll","version":1508}
+> TEXT 中文演示
+wrote 17 bytes to /dev/vled
+{"type":"state","width":32,"height":16,"text":"中文演示","color":[255,0,0],"brightness":80,"mode":"scroll","version":1509}
+UDP bridge started: /dev/vled -> 192.168.57.1:9000, interval=200 ms
+sent 128 bytes: {"type":"state","width":32,"height":16,"text":"writer-2-496","color":[67,151,61],"brightness":96,"mode":"scroll","version":1505}
+sent 128 bytes: {"type":"state","width":32,"height":16,"text":"writer-2-496","color":[67,151,61],"brightness":96,"mode":"scroll","version":1505}
+sent 128 bytes: {"type":"state","width":32,"height":16,"text":"writer-2-496","color":[67,151,61],"brightness":96,"mode":"scroll","version":1505}
+sent 128 bytes: {"type":"state","width":32,"height":16,"text":"writer-2-496","color":[67,151,61],"brightness":96,"mode":"scroll","version":1505}
+sent 128 bytes: {"type":"state","width":32,"height":16,"text":"writer-2-496","color":[67,151,61],"brightness":96,"mode":"scroll","version":1505}
+sent 128 bytes: {"type":"state","width":32,"height":16,"text":"writer-2-496","color":[67,151,61],"brightness":96,"mode":"scroll","version":1505}
+sent 128 bytes: {"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[67,151,61],"brightness":96,"mode":"scroll","version":1506}
+sent 128 bytes: {"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[67,151,61],"brightness":96,"mode":"scroll","version":1506}
+sent 128 bytes: {"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[67,151,61],"brightness":96,"mode":"scroll","version":1506}
+sent 128 bytes: {"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[67,151,61],"brightness":96,"mode":"scroll","version":1506}
+sent 128 bytes: {"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[67,151,61],"brightness":96,"mode":"scroll","version":1506}
+sent 126 bytes: {"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[255,0,0],"brightness":96,"mode":"scroll","version":1507}
+sent 126 bytes: {"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[255,0,0],"brightness":96,"mode":"scroll","version":1507}
+sent 126 bytes: {"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[255,0,0],"brightness":96,"mode":"scroll","version":1507}
+sent 126 bytes: {"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[255,0,0],"brightness":96,"mode":"scroll","version":1507}
+sent 126 bytes: {"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[255,0,0],"brightness":96,"mode":"scroll","version":1507}
+sent 126 bytes: {"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[255,0,0],"brightness":80,"mode":"scroll","version":1508}
+sent 126 bytes: {"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[255,0,0],"brightness":80,"mode":"scroll","version":1508}
+sent 126 bytes: {"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[255,0,0],"brightness":80,"mode":"scroll","version":1508}
+sent 126 bytes: {"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[255,0,0],"brightness":80,"mode":"scroll","version":1508}
+sent 126 bytes: {"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[255,0,0],"brightness":80,"mode":"scroll","version":1508}
+sent 126 bytes: {"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[255,0,0],"brightness":80,"mode":"scroll","version":1508}
+sent 126 bytes: {"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[255,0,0],"brightness":80,"mode":"scroll","version":1508}
+sent 126 bytes: {"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[255,0,0],"brightness":80,"mode":"scroll","version":1508}
+sent 126 bytes: {"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[255,0,0],"brightness":80,"mode":"scroll","version":1508}
+sent 126 bytes: {"type":"state","width":32,"height":16,"text":"VLED P3 Demo","color":[255,0,0],"brightness":80,"mode":"scroll","version":1508}
+sent 126 bytes: {"type":"state","width":32,"height":16,"text":"中文演示","color":[255,0,0],"brightness":80,"mode":"scroll","version":1509}
+sent 126 bytes: {"type":"state","width":32,"height":16,"text":"中文演示","color":[255,0,0],"brightness":80,"mode":"scroll","version":1509}
+se> COLOR 0 255 255
+wrote 15 bytes to /dev/vled
+{"type":"state","width":32,"height":16,"text":"中文演示","color":[0,255,255],"brightness":80,"mode":"scroll","version":1510}
+> MODE static
+wrote 11 bytes to /dev/vled
+{"type":"state","width":32,"height":16,"text":"中文演示","color":[0,255,255],"brightness":80,"mode":"static","version":1511}
+> CLEAR
+wrote 5 bytes to /dev/vled
+{"type":"state","width":32,"height":16,"text":"","color":[0,255,255],"brightness":80,"mode":"static","version":1512}
+Demo complete; stopping bridge cleanly.
+nt 126 bytes: {"type":"state","width":32,"height":16,"text":"中文演示","color":[255,0,0],"brightness":80,"mode":"scroll","version":1509}
+sent 126 bytes: {"type":"state","width":32,"height":16,"text":"中文演示","color":[255,0,0],"brightness":80,"mode":"scroll","version":1509}
+sent 126 bytes: {"type":"state","width":32,"height":16,"text":"中文演示","color":[255,0,0],"brightness":80,"mode":"scroll","version":1509}
+sent 128 bytes: {"type":"state","width":32,"height":16,"text":"中文演示","color":[0,255,255],"brightness":80,"mode":"scroll","version":1510}
+sent 128 bytes: {"type":"state","width":32,"height":16,"text":"中文演示","color":[0,255,255],"brightness":80,"mode":"scroll","version":1510}
+sent 128 bytes: {"type":"state","width":32,"height":16,"text":"中文演示","color":[0,255,255],"brightness":80,"mode":"scroll","version":1510}
+sent 128 bytes: {"type":"state","width":32,"height":16,"text":"中文演示","color":[0,255,255],"brightness":80,"mode":"scroll","version":1510}
+sent 128 bytes: {"type":"state","width":32,"height":16,"text":"中文演示","color":[0,255,255],"brightness":80,"mode":"scroll","version":1510}
+sent 128 bytes: {"type":"state","width":32,"height":16,"text":"中文演示","color":[0,255,255],"brightness":80,"mode":"static","version":1511}
+sent 128 bytes: {"type":"state","width":32,"height":16,"text":"中文演示","color":[0,255,255],"brightness":80,"mode":"static","version":1511}
+sent 128 bytes: {"type":"state","width":32,"height":16,"text":"中文演示","color":[0,255,255],"brightness":80,"mode":"static","version":1511}
+sent 128 bytes: {"type":"state","width":32,"height":16,"text":"中文演示","color":[0,255,255],"brightness":80,"mode":"static","version":1511}
+sent 128 bytes: {"type":"state","width":32,"height":16,"text":"中文演示","color":[0,255,255],"brightness":80,"mode":"static","version":1511}
+sent 116 bytes: {"type":"state","width":32,"height":16,"text":"","color":[0,255,255],"brightness":80,"mode":"static","version":1512}
+sent 116 bytes: {"type":"state","width":32,"height":16,"text":"","color":[0,255,255],"brightness":80,"mode":"static","version":1512}
+sent 116 bytes: {"type":"state","width":32,"height":16,"text":"","color":[0,255,255],"brightness":80,"mode":"static","version":1512}
+sent 116 bytes: {"type":"state","width":32,"height":16,"text":"","color":[0,255,255],"brightness":80,"mode":"static","version":1512}
+sent 116 bytes: {"type":"state","width":32,"height":16,"text":"","color":[0,255,255],"brightness":80,"mode":"static","version":1512}
+UDP bridge stopped

@@ -167,8 +167,8 @@ test "$network_rc" -eq 0 || exit "$network_rc"
 
 在演示过程中至少保存两张 PNG：
 
-1. `screenshots/01-linux-terminal.png`：Linux 终端同时包含 demo 命令、version 8
-   最终 JSON 和退出码 0；
+1. `screenshots/01-linux-terminal.png`：Linux 终端同时包含 demo 命令、demo 后
+   最终 JSON（相对演示前 version 增加 8）和退出码 0；
 2. `screenshots/02-windows-gui.png`：Windows 模拟器同时包含最新状态/版本和 UDP
    日志，不能只截孤立文字。
 

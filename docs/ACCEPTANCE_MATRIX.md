@@ -1,6 +1,6 @@
 # V-LED 实验四可执行验收矩阵
 
-> 状态：`SPEC_FROZEN / P1_TARGET_LINUX_PASS / P2_WINDOWS_PASS / P3_TARGET_PASS / P4_AUTHORIZED_NOT_RUN`
+> 状态：`SPEC_FROZEN / P1_TARGET_LINUX_PASS / P2_WINDOWS_PASS / P3_TARGET_PASS / P4_TARGET_EVIDENCE_PASS / P5_NOT_AUTHORIZED`
 >
 > 本文档冻结“应该实现什么、怎样证明实现真实有效”。它不是测试结果。
 > 只有目标 Linux 原始日志存在时，项目状态才可从 `NOT_RUN_ON_TARGET_LINUX` 改为 `PASS` 或 `FAIL`。
@@ -270,3 +270,4 @@ P3 实现提交为 `b0fb0b6`，目标修复提交为 `b11d5c7`：统一入口 `t
 | 20260712-1452-windows-p2 | `83caefb` | Windows NT 10.0.26220.0 / Python 3.12.9 | P2 12 项无 GUI 自动测试、人工 GUI T-SIM-01..09、关闭清理 | `PASS / P2_WINDOWS_PASS` | `docs/evidence/20260712-1452-windows-p2/` |
 | 20260712-1427-p1 | `d8c1c0d` | Ubuntu 24.04.4 / 6.17.0-35-generic / GCC 13.3 | P1 PAGE_SIZE、版本、回滚、多 FD、快照、JSON、装卸 | `PASS` | `docs/evidence/20260712-1427-ubuntu-6.17.0-35-generic-p1/` |
 | 20260712-1544-p3 | `b11d5c7` | Ubuntu 24.04.4 / 6.17.0-35 / GCC 13.3 / Python 3.12.3；Windows GUI | P3 构建、业务、边界、并发、生命周期、bridge 与跨机 UDP | `PASS / P3_TARGET_PASS` | `docs/evidence/20260712-1544-ubuntu-windows-p3/` |
+| 20260712-1653-p4 | `abad494` | Ubuntu 24.04.4 / 6.17.0-35 / GCC 13.3 / Python 3.12.3；Windows GUI | 00–08 正式分项日志、退出码、内核区间、Linux/Windows 截图 | `PASS / P4_TARGET_EVIDENCE_PASS` | `docs/evidence/20260712-1653-ubuntu-6.17.0-35-generic-p4/` |
