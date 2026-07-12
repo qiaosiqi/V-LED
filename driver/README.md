@@ -98,7 +98,19 @@ STATUS
 - `STATUS` 不改变状态，只用于配合后续读取。
 - `PIXEL` 和 `frame` 数据暂未实现，第一阶段只交付 `state` JSON。
 
-写入长度大于等于 `PAGE_SIZE` 时返回 `-EMSGSIZE`，不会截断写入，避免状态半更新。非法命令返回 `-EINVAL`，状态保持不变。
+一次 `write()` 表示一条完整命令。单次写入长度大于等于 `PAGE_SIZE`
+时返回 `-EMSGSIZE`；当前 FD 的累计写入将无法再保留结尾 NUL 时返回
+`-ENOSPC`。驱动不会截断命令。
+
+每个 `open()` 都有自己的 PAGE_SIZE 写入暂存页和 `write_offset`。本次数据
+先复制到该 FD 暂存页的当前偏移，再解析本次命令。成功后才推进该 FD 的
+写偏移；复制、语法、范围、支持性或 JSON 构建失败时，会清除本次片段并
+回滚偏移，共享状态、版本和读取快照均保持不变。另一个独立 `open()` 的
+暂存页和写容量不受影响。
+
+错误码约定：语法、参数数量、类型和范围错误返回 `-EINVAL`，`PIXEL`
+返回 `-EOPNOTSUPP`，TEXT 超过上限或状态 JSON 无法完整放入一页时返回
+`-EMSGSIZE`。用户内存复制失败返回 `-EFAULT`。
 
 ## read 返回格式
 
@@ -114,18 +126,48 @@ STATUS
 {"type":"state","width":32,"height":16,"text":"","color":[255,255,255],"brightness":100,"mode":"static","version":0}
 ```
 
-每次有效状态变更后，`version` 递增。
+只有可观察字段的值实际发生变化时，`version` 才递增一次。重复设置相同
+值、空状态下再次 `CLEAR`、`STATUS` 和任何失败写入均不递增版本。
 
-驱动的 `PAGE_SIZE` 共享缓冲区同时参与写入和读取：`write()` 先将
-有效命令保存到该缓冲区并更新设备状态；`read()` 再将当前状态 JSON
-生成到同一缓冲区，随后返回给用户态。因此，读取路径不会绕过课程设计
-要求的一页大小内核缓冲区。
+`struct vled_device` 中的 PAGE_SIZE 共享缓冲区始终保存最新、完整的状态
+JSON；模块初始化完成时它已经包含默认版本 0 JSON。命令解析使用每个 FD
+自己的暂存页，只有候选状态和候选 JSON 都成功构建后，才在同一个设备
+mutex 临界区内一次性替换共享状态和共享 JSON，避免暴露半条命令或截断
+JSON。
 
 每次 `open()` 都会创建独立文件上下文，其中分别保存读偏移、写偏移和
-稳定的读取快照。分段 `read()` 始终读取该次打开所对应的同一份快照，
-不会因为其他进程同时更新设备状态而拼接出不一致的 JSON。成功
-`write()` 后只重置当前文件上下文的读偏移，使同一文件描述符能够立即
-读取更新后的状态；写偏移继续独立累计，不与读偏移互相覆盖。
+稳定的读取快照。第一次非零长度 `read()` 在设备 mutex 内捕获共享 JSON，
+之后的分段读取只推进当前 FD 的 `read_offset`。即使其他 FD 更新设备，旧
+FD 仍会读完旧快照；读到 EOF 后继续返回 0。当前 FD 成功写入（包括
+`STATUS`）后才使自己的下一次读取重新捕获快照，其他 FD 的进度不受影响。
+`dup()` 得到的描述符按 POSIX 语义共享同一个文件上下文。设备不可 seek，
+`lseek()` 返回 `ESPIPE`。
+
+## P1 自动验收
+
+`tools/vled_fd_probe` 覆盖冻结矩阵中的 PAGE_SIZE 边界、独立写容量、双 FD
+读偏移、稳定快照、`dup()` 语义、失败原子回滚、版本规则以及 UTF-8/JSON
+转义。它必须在刚加载的新模块上运行，因为第一项会验证默认版本为 0。
+
+目标 Linux 上的执行顺序：
+
+```bash
+make -C driver clean
+make -C driver
+make -C tools clean
+make -C tools
+sudo rmmod vled 2>/dev/null || true
+sudo insmod driver/vled.ko
+sudo chmod 666 /dev/vled
+./tools/vled_fd_probe /dev/vled
+sudo rmmod vled
+```
+
+预期结果是每个测试 ID 输出 `PASS`，末行输出
+`VLED P1 probe: all checks passed`，进程退出码为 0。任一系统调用返回值、
+errno、状态 JSON、版本、偏移或快照不符合冻结契约时，探针输出 `FAIL` 并
+以非零状态退出。Windows 侧无法构建或加载内核模块，因此未在目标 Linux
+实际运行前，P1 结果必须标记为 `IMPLEMENTED_NOT_RUN`，不得记为 `PASS`。
 
 ## 构建与加载
 

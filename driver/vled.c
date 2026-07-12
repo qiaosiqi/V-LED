@@ -44,10 +44,14 @@ struct vled_device {
 };
 
 struct vled_file_context {
+	struct mutex lock;
 	loff_t read_offset;
-	loff_t write_offset;
+	size_t write_offset;
 	char *read_snapshot;
 	size_t read_snapshot_len;
+	unsigned long read_snapshot_version;
+	bool read_snapshot_valid;
+	char *write_buffer;
 };
 
 static struct vled_device vled;
@@ -95,7 +99,9 @@ static bool vled_valid_color(int value)
 	return value >= 0 && value <= 255;
 }
 
-static int vled_apply_command_locked(char *raw_command)
+static int vled_parse_command(const struct vled_state *current,
+			      char *raw_command, struct vled_state *next,
+			      bool *changed)
 {
 	char *command = vled_skip_blanks(raw_command);
 	char *arg;
@@ -106,16 +112,21 @@ static int vled_apply_command_locked(char *raw_command)
 	char mode[VLED_MODE_MAX];
 	char tail;
 
+	*next = *current;
+	*changed = false;
+
 	if (*command == '\0')
 		return -EINVAL;
 
 	if (vled_has_command(command, "TEXT")) {
 		arg = vled_skip_blanks(command + strlen("TEXT"));
-		if (strlen(arg) >= sizeof(vled.state.text))
+		if (strlen(arg) >= sizeof(next->text))
 			return -EMSGSIZE;
 
-		strscpy(vled.state.text, arg, sizeof(vled.state.text));
-		vled.state.version++;
+		if (strcmp(next->text, arg) != 0) {
+			strscpy(next->text, arg, sizeof(next->text));
+			*changed = true;
+		}
 		return 0;
 	}
 
@@ -127,10 +138,12 @@ static int vled_apply_command_locked(char *raw_command)
 		    !vled_valid_color(blue))
 			return -EINVAL;
 
-		vled.state.red = red;
-		vled.state.green = green;
-		vled.state.blue = blue;
-		vled.state.version++;
+		if (next->red != red || next->green != green || next->blue != blue) {
+			next->red = red;
+			next->green = green;
+			next->blue = blue;
+			*changed = true;
+		}
 		return 0;
 	}
 
@@ -141,8 +154,10 @@ static int vled_apply_command_locked(char *raw_command)
 		if (brightness < 0 || brightness > 100)
 			return -EINVAL;
 
-		vled.state.brightness = brightness;
-		vled.state.version++;
+		if (next->brightness != brightness) {
+			next->brightness = brightness;
+			*changed = true;
+		}
 		return 0;
 	}
 
@@ -153,15 +168,19 @@ static int vled_apply_command_locked(char *raw_command)
 		if (strcmp(mode, "static") != 0 && strcmp(mode, "scroll") != 0)
 			return -EINVAL;
 
-		strscpy(vled.state.mode, mode, sizeof(vled.state.mode));
-		vled.state.version++;
+		if (strcmp(next->mode, mode) != 0) {
+			strscpy(next->mode, mode, sizeof(next->mode));
+			*changed = true;
+		}
 		return 0;
 	}
 
 	command = strim(command);
 	if (strcmp(command, "CLEAR") == 0) {
-		vled.state.text[0] = '\0';
-		vled.state.version++;
+		if (next->text[0] != '\0') {
+			next->text[0] = '\0';
+			*changed = true;
+		}
 		return 0;
 	}
 
@@ -174,81 +193,88 @@ static int vled_apply_command_locked(char *raw_command)
 	return -EINVAL;
 }
 
-static void vled_json_escape(const char *src, char *dst, size_t dst_size)
+static int vled_json_escape(const char *src, char *dst, size_t dst_size)
 {
 	size_t in = 0;
 	size_t out = 0;
 	unsigned char ch;
 
 	if (dst_size == 0)
-		return;
+		return -EMSGSIZE;
 
-	while (src[in] != '\0' && out + 1 < dst_size) {
+	while (src[in] != '\0') {
 		ch = src[in++];
 
 		switch (ch) {
 		case '"':
 		case '\\':
-			if (out + 2 >= dst_size)
-				goto done;
-			dst[out++] = '\\';
-			dst[out++] = ch;
-			break;
 		case '\n':
-			if (out + 2 >= dst_size)
-				goto done;
-			dst[out++] = '\\';
-			dst[out++] = 'n';
-			break;
 		case '\r':
-			if (out + 2 >= dst_size)
-				goto done;
-			dst[out++] = '\\';
-			dst[out++] = 'r';
-			break;
 		case '\t':
 			if (out + 2 >= dst_size)
-				goto done;
+				return -EMSGSIZE;
 			dst[out++] = '\\';
-			dst[out++] = 't';
+			switch (ch) {
+			case '\n':
+				dst[out++] = 'n';
+				break;
+			case '\r':
+				dst[out++] = 'r';
+				break;
+			case '\t':
+				dst[out++] = 't';
+				break;
+			default:
+				dst[out++] = ch;
+				break;
+			}
 			break;
 		default:
-			if (ch < 0x20)
-				dst[out++] = ' ';
-			else
-				dst[out++] = ch;
+			if (out + 1 >= dst_size)
+				return -EMSGSIZE;
+			/* Other JSON control bytes are normalized deterministically. */
+			dst[out++] = ch < 0x20 ? ' ' : ch;
 			break;
 		}
 	}
 
-done:
 	dst[out] = '\0';
+	return 0;
 }
 
-static size_t vled_build_json_locked(char *dst, size_t dst_size,
-				     char *escaped_text, size_t escaped_size)
+static int vled_build_json(const struct vled_state *state, char *dst,
+			   size_t dst_size, char *escaped_text,
+			   size_t escaped_size)
 {
+	int ret;
 	int written;
 
-	vled_json_escape(vled.state.text, escaped_text, escaped_size);
+	ret = vled_json_escape(state->text, escaped_text, escaped_size);
+	if (ret)
+		return ret;
+
 	written = snprintf(dst, dst_size,
 			   "{\"type\":\"state\",\"width\":%d,\"height\":%d,"
 			   "\"text\":\"%s\",\"color\":[%d,%d,%d],"
 			   "\"brightness\":%d,\"mode\":\"%s\",\"version\":%lu}",
-			   vled.state.width, vled.state.height, escaped_text,
-			   vled.state.red, vled.state.green, vled.state.blue,
-			   vled.state.brightness, vled.state.mode,
-			   vled.state.version);
+			   state->width, state->height, escaped_text,
+			   state->red, state->green, state->blue,
+			   state->brightness, state->mode, state->version);
 	if (written < 0)
-		return 0;
-	if (written >= dst_size)
-		return dst_size - 1;
+		return written;
+	if ((size_t)written >= dst_size)
+		return -EMSGSIZE;
 	return written;
 }
 
 static int vled_open(struct inode *inode, struct file *file)
 {
 	struct vled_file_context *ctx;
+	int ret;
+
+	ret = nonseekable_open(inode, file);
+	if (ret)
+		return ret;
 
 	ctx = kzalloc(sizeof(*ctx), GFP_KERNEL);
 	if (!ctx)
@@ -260,15 +286,25 @@ static int vled_open(struct inode *inode, struct file *file)
 		return -ENOMEM;
 	}
 
+	ctx->write_buffer = kzalloc(PAGE_SIZE, GFP_KERNEL);
+	if (!ctx->write_buffer) {
+		kfree(ctx->read_snapshot);
+		kfree(ctx);
+		return -ENOMEM;
+	}
+
+	mutex_init(&ctx->lock);
 	file->private_data = ctx;
-	return nonseekable_open(inode, file);
+	return 0;
 }
 
 static int vled_release(struct inode *inode, struct file *file)
 {
 	struct vled_file_context *ctx = file->private_data;
 
+	(void)inode;
 	if (ctx) {
+		kfree(ctx->write_buffer);
 		kfree(ctx->read_snapshot);
 		kfree(ctx);
 	}
@@ -280,38 +316,30 @@ static ssize_t vled_read(struct file *file, char __user *user_buf,
 			 size_t count, loff_t *ppos)
 {
 	struct vled_file_context *ctx = file->private_data;
-	char *escaped_text;
 	ssize_t ret;
 
+	(void)ppos;
 	if (!ctx)
 		return -EIO;
 	if (count == 0)
 		return 0;
 
-	/*
-	 * Capture one stable snapshot when this open file starts reading.
-	 * The JSON is first generated in the driver's shared PAGE_SIZE buffer,
-	 * so read() and write() both operate through that required buffer.
-	 */
-	if (ctx->read_offset == 0) {
-		escaped_text = kzalloc(VLED_ESCAPED_TEXT_MAX, GFP_KERNEL);
-		if (!escaped_text)
-			return -ENOMEM;
-
+	mutex_lock(&ctx->lock);
+	if (!ctx->read_snapshot_valid) {
 		mutex_lock(&vled.lock);
-		vled.buffer_len = vled_build_json_locked(
-			vled.buffer, sizeof(vled.buffer), escaped_text,
-			VLED_ESCAPED_TEXT_MAX);
 		memcpy(ctx->read_snapshot, vled.buffer, vled.buffer_len);
+		ctx->read_snapshot[vled.buffer_len] = '\0';
 		ctx->read_snapshot_len = vled.buffer_len;
+		ctx->read_snapshot_version = vled.state.version;
+		ctx->read_offset = 0;
+		ctx->read_snapshot_valid = true;
 		mutex_unlock(&vled.lock);
-
-		kfree(escaped_text);
 	}
 
 	ret = simple_read_from_buffer(user_buf, count, &ctx->read_offset,
 				      ctx->read_snapshot,
 				      ctx->read_snapshot_len);
+	mutex_unlock(&ctx->lock);
 	return ret;
 }
 
@@ -319,9 +347,16 @@ static ssize_t vled_write(struct file *file, const char __user *user_buf,
 			  size_t count, loff_t *ppos)
 {
 	struct vled_file_context *ctx = file->private_data;
+	struct vled_state candidate;
+	char *escaped_text;
+	char *new_json;
 	char *command;
-	int ret;
+	size_t old_offset;
+	bool changed;
+	int json_len;
+	ssize_t ret;
 
+	(void)ppos;
 	if (!ctx)
 		return -EIO;
 	if (count == 0)
@@ -329,31 +364,67 @@ static ssize_t vled_write(struct file *file, const char __user *user_buf,
 	if (count >= PAGE_SIZE)
 		return -EMSGSIZE;
 
-	command = memdup_user_nul(user_buf, count);
-	if (IS_ERR(command))
-		return PTR_ERR(command);
+	new_json = kzalloc(PAGE_SIZE, GFP_KERNEL);
+	if (!new_json)
+		return -ENOMEM;
+	escaped_text = kzalloc(VLED_ESCAPED_TEXT_MAX, GFP_KERNEL);
+	if (!escaped_text) {
+		kfree(new_json);
+		return -ENOMEM;
+	}
 
+	mutex_lock(&ctx->lock);
+	if (ctx->write_offset >= PAGE_SIZE ||
+	    count >= PAGE_SIZE - ctx->write_offset) {
+		ret = -ENOSPC;
+		goto unlock_context;
+	}
+
+	old_offset = ctx->write_offset;
+	if (copy_from_user(ctx->write_buffer + old_offset, user_buf, count)) {
+		memset(ctx->write_buffer + old_offset, 0, count + 1);
+		ret = -EFAULT;
+		goto unlock_context;
+	}
+	ctx->write_buffer[old_offset + count] = '\0';
+	command = ctx->write_buffer + old_offset;
 	vled_strip_line_end(command);
 
 	mutex_lock(&vled.lock);
-	ret = vled_apply_command_locked(command);
-	if (ret == 0) {
-		memset(vled.buffer, 0, sizeof(vled.buffer));
-		strscpy(vled.buffer, command, sizeof(vled.buffer));
-		vled.buffer_len = strlen(vled.buffer);
-		ctx->write_offset += count;
-		/*
-		 * A successful command creates a new readable state for this
-		 * file without coupling its independent write position to the
-		 * read position.
-		 */
-		ctx->read_offset = 0;
-		ctx->read_snapshot_len = 0;
-	}
-	mutex_unlock(&vled.lock);
+	ret = vled_parse_command(&vled.state, command, &candidate, &changed);
+	if (ret)
+		goto rollback_locked;
 
-	kfree(command);
-	return ret == 0 ? count : ret;
+	if (changed)
+		candidate.version = vled.state.version + 1;
+	json_len = vled_build_json(&candidate, new_json, PAGE_SIZE,
+				   escaped_text, VLED_ESCAPED_TEXT_MAX);
+	if (json_len < 0) {
+		ret = json_len;
+		goto rollback_locked;
+	}
+
+	vled.state = candidate;
+	memset(vled.buffer, 0, sizeof(vled.buffer));
+	memcpy(vled.buffer, new_json, (size_t)json_len);
+	vled.buffer_len = json_len;
+	ctx->write_offset = old_offset + count;
+	ctx->read_offset = 0;
+	ctx->read_snapshot_len = 0;
+	ctx->read_snapshot_version = 0;
+	ctx->read_snapshot_valid = false;
+	mutex_unlock(&vled.lock);
+	ret = count;
+	goto unlock_context;
+
+rollback_locked:
+	memset(ctx->write_buffer + old_offset, 0, count + 1);
+	mutex_unlock(&vled.lock);
+unlock_context:
+	mutex_unlock(&ctx->lock);
+	kfree(escaped_text);
+	kfree(new_json);
+	return ret;
 }
 
 static const struct file_operations vled_fops = {
@@ -362,14 +433,28 @@ static const struct file_operations vled_fops = {
 	.read = vled_read,
 	.write = vled_write,
 	.release = vled_release,
+	.llseek = no_llseek,
 };
 
 static int __init vled_init(void)
 {
+	char *escaped_text;
+	int json_len;
 	int ret;
 
 	mutex_init(&vled.lock);
 	vled_reset_state();
+
+	escaped_text = kzalloc(VLED_ESCAPED_TEXT_MAX, GFP_KERNEL);
+	if (!escaped_text)
+		return -ENOMEM;
+	json_len = vled_build_json(&vled.state, vled.buffer,
+				   sizeof(vled.buffer), escaped_text,
+				   VLED_ESCAPED_TEXT_MAX);
+	kfree(escaped_text);
+	if (json_len < 0)
+		return json_len;
+	vled.buffer_len = json_len;
 
 	ret = alloc_chrdev_region(&vled.devno, 0, 1, VLED_DEVICE_NAME);
 	if (ret)
