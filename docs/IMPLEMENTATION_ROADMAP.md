@@ -638,6 +638,7 @@ tools: make the bridge event driven
 | 2026-07-12 | P1 原始失败、中间警告和最终成功日志分层固化 | 证据目录 `docs/evidence/20260712-1427-ubuntu-6.17.0-35-generic-p1/`，源归档哈希可复核 | 已完成 |
 | 2026-07-12 | 用户授权开始 P3；实现提交 `b0fb0b6` | 增加统一验收器、bridge 黑盒探针、演示编排和参数化 Windows UDP 发送器；14 项 Windows 测试通过 | `IMPLEMENTED_NOT_RUN_TARGET_LINUX` |
 | 2026-07-12 | P3 临时移除 CLI 多余参数拒绝 | 正确实现对 `read NUL extra` 返回 1，mutation 返回 0；证明 CLI 负面验收可捕获错误实现，mutation 已删除 | 已完成 |
+| 2026-07-12 | P3 首次目标运行在 T-CMD 停止 | bridge、模块加载和 P1 回归均通过；验收器错误地把零长度 write 当作空白命令 EINVAL，现改用三个空格验证真正空白命令，并固定匹配内核的编译器可执行名 | 修复后待重跑 |
 | 待确认 | 高价值扩展采用 `poll + wait queue` | 与实验四主题高度一致，且可量化优化效果 | 待基础验收通过 |
 
 ## 10. 当前检查点

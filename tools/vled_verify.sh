@@ -8,6 +8,15 @@ cycles=${VLED_LIFECYCLE_CYCLES:-3}
 module="$repo_dir/driver/vled.ko"
 loaded=0
 run_start=$(date --iso-8601=seconds)
+kernel_cc=${VLED_KERNEL_CC:-}
+
+if [[ -z $kernel_cc ]]; then
+    if command -v x86_64-linux-gnu-gcc-13 >/dev/null 2>&1; then
+        kernel_cc=x86_64-linux-gnu-gcc-13
+    else
+        kernel_cc=gcc
+    fi
+fi
 
 cleanup() {
     if [[ $loaded -eq 1 ]]; then
@@ -23,7 +32,7 @@ fi
 
 echo "== build driver and tools =="
 make -C "$repo_dir/driver" clean
-make -C "$repo_dir/driver" V=1
+make -C "$repo_dir/driver" V=1 CC="$kernel_cc"
 make -C "$repo_dir/tools" clean
 make -C "$repo_dir/tools" CFLAGS='-Wall -Wextra -Werror -O2'
 

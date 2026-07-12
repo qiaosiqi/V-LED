@@ -135,7 +135,7 @@ def test_commands(device: str) -> None:
     for command in ("COLOR -1 0 0", "COLOR 0 0 256", "COLOR 1 2", "COLOR 1 2 3 4",
                     "COLOR red 0 0", "BRIGHTNESS -1", "BRIGHTNESS 101",
                     "BRIGHTNESS bright", "BRIGHTNESS 1 2", "MODE blink", "MODE",
-                    "MODE static extra", "", "UNKNOWN", "mode static"):
+                    "MODE static extra", "   ", "UNKNOWN", "mode static"):
         expect_rollback(device, command, errno.EINVAL)
     expect_rollback(device, "PIXEL 0 0 1", errno.EOPNOTSUPP)
 
