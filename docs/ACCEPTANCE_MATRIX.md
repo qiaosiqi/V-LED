@@ -246,6 +246,10 @@ P5 测试先行提交为 `eda12b6`，驱动候选为 `9f43557`，事件驱动 br
 `568c263`。Windows 侧静态契约、Python/C/shell 语法和 16 项模拟器回归已通过；
 以下 T-POLL-01..08 尚未在目标 Linux 运行，因此不得标记为 PASS。
 
+首次目标运行在 P1 `T-ROLLBACK` 适配处超时：`strace` 显示探针以阻塞
+`O_RDWR` 读完快照后再次 `read()`，驱动按 P5 契约进入等待。该失败不是 PASS，
+原始用户回传输出已保留；修复批次把该 FD 改为 `O_NONBLOCK` 并继续验证 `EAGAIN`。
+
 | ID | Given/When | Then |
 |---|---|---|
 | T-POLL-01 | 新 FD 初次 poll | 当前状态可读 |
