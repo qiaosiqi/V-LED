@@ -1,6 +1,6 @@
 # V-LED 实验四可执行验收矩阵
 
-> 状态：`SPEC_FROZEN / P1_TARGET_LINUX_PASS / P2_WINDOWS_PASS / P3_TARGET_PASS / P4_TARGET_EVIDENCE_PASS / P5_NOT_AUTHORIZED`
+> 状态：`SPEC_FROZEN / P1_TARGET_LINUX_PASS / P2_WINDOWS_PASS / P3_TARGET_PASS / P4_TARGET_EVIDENCE_PASS / P5_WINDOWS_STATIC_PASS / P5_NOT_RUN_TARGET_LINUX`
 >
 > 本文档冻结“应该实现什么、怎样证明实现真实有效”。它不是测试结果。
 > 只有目标 Linux 原始日志存在时，项目状态才可从 `NOT_RUN_ON_TARGET_LINUX` 改为 `PASS` 或 `FAIL`。
@@ -241,6 +241,10 @@ P3 实现提交为 `b0fb0b6`，目标修复提交为 `b11d5c7`：统一入口 `t
 - 上述结果关闭 P2 Windows 门禁，但不替代 P3/P4 的 Linux→Windows 跨机 UDP 和目标 Linux 证据。
 
 ## 11. P5 poll + wait queue 扩展验收
+
+P5 测试先行提交为 `eda12b6`，驱动候选为 `9f43557`，事件驱动 bridge 候选为
+`568c263`。Windows 侧静态契约、Python/C/shell 语法和 16 项模拟器回归已通过；
+以下 T-POLL-01..08 尚未在目标 Linux 运行，因此不得标记为 PASS。
 
 | ID | Given/When | Then |
 |---|---|---|

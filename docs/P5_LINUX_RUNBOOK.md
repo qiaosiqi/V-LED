@@ -1,6 +1,6 @@
 # P5 poll + wait queue 目标 Linux 运行说明
 
-> 状态：`TESTS_ADDED / EXPECTED_TO_FAIL_ON_P4_BASELINE / NOT_RUN_ON_TARGET_LINUX`
+> 状态：`P5_WINDOWS_STATIC_PASS / NOT_RUN_ON_TARGET_LINUX`
 
 P5 只允许在 Windows 静态检查完成、实现与测试已提交并以普通 fast-forward
 推送后，在目标 Ubuntu 24.04.4 / Linux 6.17.0-35-generic 上测试明确提交哈希。
