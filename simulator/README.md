@@ -1,36 +1,79 @@
-# VLED Windows 模拟器（C端模块）
-## 项目说明
-本程序为VLED实验Windows可视化客户端，通过UDP 9000端口接收Linux虚拟机驱动上报的JSON状态，渲染虚拟LED点阵屏幕。
-完全匹配项目约定通信协议，支持静态/滚动文字、RGB调色、亮度调节、实时状态日志调试。
+# VLED Windows 模拟器
 
-## 运行环境
-Python 3.8 及以上版本
-仅使用Python标准库，无需额外pip安装第三方包：
-- socket：UDP网络通信
-- json：解析状态报文
-- tkinter：GUI界面、LED画布渲染
-- threading：后台异步监听网络，界面不卡顿
+模拟器在 Windows 上监听 UDP 9000，接收 Linux `vled_bridge` 发送的完整
+状态 JSON，并渲染文字、颜色、亮度和静态/滚动模式。只使用 Python 标准
+库，建议使用 Python 3.12；运行 GUI 的解释器必须包含 Tkinter。
 
-## 文件清单
-1. `vled_sim.py`：主模拟器程序
-   - UDP 0.0.0.0:9000持续监听
-   - 解析标准state格式JSON
-   - 渲染32×16 LED点阵，文字、颜色、亮度、滚动模式展示
-   - 内置日志面板、连接状态、版本号显示、手动清屏按钮
-2. `test_udp.py`：本地自测脚本
-   - 本机自发自收测试JSON报文
-   - 无需Linux虚拟机，快速验证界面渲染逻辑
+## P2 线程模型
 
-## 启动步骤
-### 方式1：PyCharm（推荐）
-1. 使用PyCharm打开项目，切换至`windows-sim`分支
-2. 右键 `vled_sim.py` → Run，弹出模拟器窗口即启动成功
-3. 本地自测：右键 `test_udp.py` → Run，自动发送测试数据，屏幕出现滚动彩色文字
+- `vled_protocol.py` 是纯协议模块，负责 UTF-8、JSON、必填字段、类型、
+  范围和报文大小校验。
+- `vled_receiver.py` 是不导入 Tkinter 的 UDP 后台接收器。它只接收报文、
+  调用协议模块、生成不可变事件并写入有界 `queue.Queue`。
+- `vled_model.py` 保存最新 UDP 状态和手动覆盖规则，不依赖 GUI。
+- `vled_sim.py` 的 Tk 主线程用 `root.after()` 排空事件队列，并一次性替换
+  完整状态。所有 Canvas、Label、Text 和窗口操作都只发生在主线程。
+- 关闭窗口时先设置停止事件并关闭 socket，再等待接收线程退出后销毁窗口。
+- 日志历史最多保留 200 条；事件队列最多保留 1024 个事件，满时淘汰最旧
+  事件，因此高频报文不会造成无界内存增长。
 
-### 方式2：CMD命令行
-```cmd
-# 启动模拟器
-python vled_sim.py
+导入 `simulator.vled_sim` 不会创建窗口；只有执行 `main()` 才创建 Tk 根窗口。
 
-# 新开终端执行本地自测
-python test_udp.py
+## 冻结协议
+
+合法报文必须是 UTF-8 编码的单个 JSON 对象，且完整包含：
+
+```json
+{"type":"state","width":32,"height":16,"text":"Hello VLED","color":[255,0,0],"brightness":80,"mode":"static","version":12}
+```
+
+校验约束：
+
+- 报文不超过 4096 字节；
+- `type` 必须为 `state`；
+- `width`、`height` 是 `1..128` 的普通整数，且像素总数不超过 4096；
+- `text` 是字符串，UTF-8 编码后不超过 1023 字节；
+- `color` 是恰好三个 `0..255` 普通整数组成的列表；
+- `brightness` 是 `0..100` 普通整数；
+- `mode` 只能是 `static` 或 `scroll`；
+- `version` 是非负普通整数。
+
+Python 的 `bool` 虽然是 `int` 子类，但协议中会明确拒绝。任何缺字段、类型
+错误、越界、非法 UTF-8、非法 JSON、非 state 或超大报文都生成拒绝事件，
+不会部分修改当前状态。
+
+## 手动覆盖与本地清屏
+
+手动颜色和亮度只覆盖显示值，不覆盖后台保存的最新 UDP 状态。覆盖期间到达
+的新 UDP 状态仍会完整保存；点击“恢复 UDP”后立即显示最新 UDP 值。
+
+“本地预览清屏”只隐藏当前预览文字，不向 Linux 驱动写入 `CLEAR`，日志会
+明确说明这一点。下一条合法 UDP 状态到达时恢复显示其文字。
+
+## 无 GUI 自动测试
+
+在仓库根目录执行：
+
+```powershell
+python -m unittest discover -s simulator/tests -v
+```
+
+测试不会创建 Tk 窗口，覆盖：合法 static/scroll、缺字段、错误类型和值域、
+非法 mode、非法 UTF-8、非 JSON、非 state、超大报文、手动覆盖恢复、仅本地
+清屏、有界日志/队列、UDP 收发、不可变事件以及 socket/线程关闭。
+
+## 启动与本机烟雾测试
+
+```powershell
+python simulator/vled_sim.py
+```
+
+另开终端发送一条合法报文：
+
+```powershell
+python simulator/test_udp.py
+```
+
+人工 GUI 门禁还需确认：窗口能显示报文、手动覆盖与恢复行为正确、日志条数
+受限、关闭窗口后进程及时退出。Windows 人工检查通过不等同于 Linux 全链路
+验收；跨机 UDP 证据留到 P3/P4。
