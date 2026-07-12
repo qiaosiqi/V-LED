@@ -27,10 +27,11 @@ Windows 模拟器要求收到 UTF-8 编码的 JSON，且字段 `type` 必须为 
 
 ## B 部分负责内容
 
-B 部分位于 Linux 虚拟机用户态，包含两个程序：
+B 部分位于 Linux 虚拟机用户态，包含三个程序：
 
 1. `vled_cli`：直接操作 `/dev/vled`，测试驱动的 `open/read/write/close`。
 2. `vled_bridge`：读取 `/dev/vled` 返回的 JSON 状态字符串，并通过 UDP 发送给 Windows 主机上的 VLED 模拟器。
+3. `vled_fd_probe`：P1 自动验收探针，检查 PAGE_SIZE 边界、多 FD 独立偏移、稳定快照和失败原子回滚。
 
 驱动本身不直接联网，网络转发放在用户态 `vled_bridge` 程序中完成。
 
@@ -94,6 +95,18 @@ sudo chmod 666 /dev/vled
 ```
 
 这些命令可以证明用户态程序能够打开字符设备、向驱动写入文本命令、从设备读取 JSON 状态，并正常关闭设备。
+
+## P1 文件上下文与边界探针
+
+在刚加载的新模块上执行：
+
+```bash
+./vled_fd_probe /dev/vled
+```
+
+探针检查零长度和 PAGE_SIZE 边界、每个 open 的独立写容量、双 FD 分段
+读取、更新期间的旧快照稳定性、失败命令对状态/版本/偏移/快照的回滚，
+以及 JSON 转义。全部通过时退出码为 0；任何检查失败时退出码为 1。
 
 ## UDP 桥接测试
 
