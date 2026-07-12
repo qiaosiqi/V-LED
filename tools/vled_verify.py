@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 PAGE_SIZE = os.sysconf("SC_PAGE_SIZE") if hasattr(os, "sysconf") else 4096
+READ_FLAGS = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0)
 REQUIRED_FIELDS = {
     "type", "width", "height", "text", "color", "brightness", "mode", "version"
 }
@@ -66,7 +67,7 @@ def validate_state(raw: bytes) -> dict[str, Any]:
 
 
 def read_state(device: str, chunk: int = PAGE_SIZE) -> dict[str, Any]:
-    fd = os.open(device, os.O_RDONLY | os.O_NONBLOCK)
+    fd = os.open(device, READ_FLAGS)
     try:
         parts: list[bytes] = []
         while True:
@@ -77,6 +78,13 @@ def read_state(device: str, chunk: int = PAGE_SIZE) -> dict[str, Any]:
             if not block:
                 break
             parts.append(block)
+            try:
+                # Stop at the first complete snapshot. Under P5 a newer version
+                # may already be readable immediately after this one; another
+                # read would concatenate two individually valid JSON objects.
+                return validate_state(b"".join(parts))
+            except Failure:
+                pass
         return validate_state(b"".join(parts))
     finally:
         os.close(fd)
