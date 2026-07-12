@@ -347,7 +347,7 @@ static ssize_t vled_write(struct file *file, const char __user *user_buf,
 			  size_t count, loff_t *ppos)
 {
 	struct vled_file_context *ctx = file->private_data;
-	struct vled_state candidate;
+	struct vled_state *candidate;
 	char *escaped_text;
 	char *new_json;
 	char *command;
@@ -372,6 +372,12 @@ static ssize_t vled_write(struct file *file, const char __user *user_buf,
 		kfree(new_json);
 		return -ENOMEM;
 	}
+	candidate = kmalloc(sizeof(*candidate), GFP_KERNEL);
+	if (!candidate) {
+		kfree(escaped_text);
+		kfree(new_json);
+		return -ENOMEM;
+	}
 
 	mutex_lock(&ctx->lock);
 	if (ctx->write_offset >= PAGE_SIZE ||
@@ -391,20 +397,20 @@ static ssize_t vled_write(struct file *file, const char __user *user_buf,
 	vled_strip_line_end(command);
 
 	mutex_lock(&vled.lock);
-	ret = vled_parse_command(&vled.state, command, &candidate, &changed);
+	ret = vled_parse_command(&vled.state, command, candidate, &changed);
 	if (ret)
 		goto rollback_locked;
 
 	if (changed)
-		candidate.version = vled.state.version + 1;
-	json_len = vled_build_json(&candidate, new_json, PAGE_SIZE,
+		candidate->version = vled.state.version + 1;
+	json_len = vled_build_json(candidate, new_json, PAGE_SIZE,
 				   escaped_text, VLED_ESCAPED_TEXT_MAX);
 	if (json_len < 0) {
 		ret = json_len;
 		goto rollback_locked;
 	}
 
-	vled.state = candidate;
+	vled.state = *candidate;
 	memset(vled.buffer, 0, sizeof(vled.buffer));
 	memcpy(vled.buffer, new_json, (size_t)json_len);
 	vled.buffer_len = json_len;
@@ -422,6 +428,7 @@ rollback_locked:
 	mutex_unlock(&vled.lock);
 unlock_context:
 	mutex_unlock(&ctx->lock);
+	kfree(candidate);
 	kfree(escaped_text);
 	kfree(new_json);
 	return ret;
