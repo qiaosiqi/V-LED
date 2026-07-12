@@ -66,11 +66,14 @@ def validate_state(raw: bytes) -> dict[str, Any]:
 
 
 def read_state(device: str, chunk: int = PAGE_SIZE) -> dict[str, Any]:
-    fd = os.open(device, os.O_RDONLY)
+    fd = os.open(device, os.O_RDONLY | os.O_NONBLOCK)
     try:
         parts: list[bytes] = []
         while True:
-            block = os.read(fd, chunk)
+            try:
+                block = os.read(fd, chunk)
+            except BlockingIOError:
+                break
             if not block:
                 break
             parts.append(block)

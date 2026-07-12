@@ -26,6 +26,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
+#include <poll.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -97,28 +98,6 @@ static int open_udp_socket(const char *ip, int port, struct sockaddr_in *addr)
     }
 
     return sock;
-}
-
-static ssize_t read_vled_once(const char *dev, char *buf, size_t size)
-{
-    int fd = open(dev, O_RDONLY);
-    ssize_t n;
-
-    if (fd < 0) {
-        perror("open /dev/vled");
-        return -1;
-    }
-
-    n = read(fd, buf, size - 1);
-    if (n < 0) {
-        perror("read /dev/vled");
-        close(fd);
-        return -1;
-    }
-
-    buf[n] = '\0';
-    close(fd);
-    return n;
 }
 
 static int consume_literal(const char **cursor, const char *literal)
@@ -216,6 +195,7 @@ int main(int argc, char **argv)
     const char *ip;
     const char *dev = DEFAULT_DEV;
     int port = DEFAULT_PORT;
+    int dev_fd;
     int sock;
     struct sockaddr_in udp_addr;
     unsigned int interval_ms = DEFAULT_INTERVAL_MS;
@@ -252,11 +232,54 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    printf("UDP bridge started: %s -> %s:%d, interval=%u ms\n",
+    dev_fd = open(dev, O_RDONLY | O_NONBLOCK);
+    if (dev_fd < 0) {
+        perror("open /dev/vled");
+        close(sock);
+        return 1;
+    }
+
+    printf("UDP bridge started: %s -> %s:%d, poll_timeout=%u ms\n",
            dev, ip, port, interval_ms);
 
     while (running) {
-        ssize_t n = read_vled_once(dev, buf, sizeof(buf));
+        struct pollfd item = {.fd = dev_fd, .events = POLLIN | POLLRDNORM};
+        int poll_result = poll(&item, 1, (int)interval_ms);
+        ssize_t n;
+
+        if (poll_result < 0) {
+            if (errno == EINTR && !running)
+                break;
+            if (errno == EINTR)
+                continue;
+            perror("poll /dev/vled");
+            close(dev_fd);
+            close(sock);
+            return 1;
+        }
+        if (poll_result == 0)
+            continue;
+        if (item.revents & (POLLERR | POLLNVAL)) {
+            fprintf(stderr, "poll /dev/vled: revents=0x%x\n", item.revents);
+            close(dev_fd);
+            close(sock);
+            return 1;
+        }
+        if (!(item.revents & (POLLIN | POLLRDNORM)))
+            continue;
+
+        n = read(dev_fd, buf, sizeof(buf) - 1);
+        if (n < 0 && errno == EAGAIN)
+            continue;
+        if (n < 0) {
+            if (errno == EINTR && !running)
+                break;
+            perror("read /dev/vled");
+            close(dev_fd);
+            close(sock);
+            return 1;
+        }
+        buf[n] = '\0';
         if (n > 0) {
             if (!validate_state_json(buf)) {
                 fprintf(stderr, "skip non-state payload: %s\n", buf);
@@ -264,15 +287,16 @@ int main(int argc, char **argv)
                               (const struct sockaddr *)&udp_addr,
                               sizeof(udp_addr)) < 0) {
                 perror("sendto");
+                close(dev_fd);
                 close(sock);
                 return 1;
             } else {
                 printf("sent %zd bytes: %s\n", n, buf);
             }
         }
-        usleep(interval_ms * 1000U);
     }
 
+    close(dev_fd);
     close(sock);
     puts("UDP bridge stopped");
     return 0;

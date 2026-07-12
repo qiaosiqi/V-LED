@@ -12,6 +12,9 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#ifndef O_NONBLOCK
+#define O_NONBLOCK 0
+#endif
 #endif
 
 #define DEFAULT_DEV "/dev/vled"
@@ -108,6 +111,8 @@ static int read_all_fd(const char *id, int fd, char *output, size_t capacity,
             request = capacity - used - 1;
         count = read(fd, output + used, request);
         if (count < 0) {
+            if (errno == EAGAIN)
+                break;
             char message[256];
 
             snprintf(message, sizeof(message), "read: %s", strerror(errno));
@@ -129,7 +134,7 @@ static int read_all_fd(const char *id, int fd, char *output, size_t capacity,
 
 static int read_state(const char *id, const char *dev, char *output)
 {
-    int fd = open_checked(id, dev, O_RDONLY);
+    int fd = open_checked(id, dev, O_RDONLY | O_NONBLOCK);
     int size;
 
     if (fd < 0)
@@ -325,7 +330,7 @@ static void test_atomic_rollback(const char *dev, size_t page_size)
         free(page);
         return;
     }
-    fd = open_checked("T-ROLLBACK", dev, O_RDWR);
+    fd = open_checked("T-ROLLBACK", dev, O_RDWR | O_NONBLOCK);
     if (fd < 0) {
         free(page);
         return;
@@ -348,7 +353,8 @@ static void test_atomic_rollback(const char *dev, size_t page_size)
         if (expect_write_error("T-ROLLBACK", fd, "MODE blink",
                                strlen("MODE blink"), EINVAL) < 0)
             ok = 0;
-        if (read(fd, &byte, 1) != 0) {
+        errno = 0;
+        if (read(fd, &byte, 1) != -1 || errno != EAGAIN) {
             fail("T-ROLLBACK", "failed write refreshed or rewound read snapshot");
             ok = 0;
         }
@@ -379,8 +385,8 @@ static void test_multifd_snapshot(const char *dev)
         read_state("T-FD-03", dev, old_state) < 0)
         return;
 
-    fd_a = open_checked("T-FD-01", dev, O_RDONLY);
-    fd_b = open_checked("T-FD-01", dev, O_RDONLY);
+    fd_a = open_checked("T-FD-01", dev, O_RDONLY | O_NONBLOCK);
+    fd_b = open_checked("T-FD-01", dev, O_RDONLY | O_NONBLOCK);
     if (fd_a < 0 || fd_b < 0) {
         if (fd_a >= 0)
             close(fd_a);
@@ -439,7 +445,7 @@ static void test_dup_offset(const char *dev)
 
     if (read_state("T-FD-04", dev, expected) < 0)
         return;
-    fd = open_checked("T-FD-04", dev, O_RDONLY);
+    fd = open_checked("T-FD-04", dev, O_RDONLY | O_NONBLOCK);
     if (fd < 0)
         return;
     duplicate = dup(fd);
