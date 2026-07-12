@@ -1,6 +1,6 @@
 # V-LED 实验四可执行验收矩阵
 
-> 状态：`SPEC_FROZEN / P1_TARGET_LINUX_PASS / P2_WINDOWS_PASS / P3_NOT_AUTHORIZED`
+> 状态：`SPEC_FROZEN / P1_TARGET_LINUX_PASS / P2_WINDOWS_PASS / P3_IMPLEMENTED_NOT_RUN_TARGET_LINUX`
 >
 > 本文档冻结“应该实现什么、怎样证明实现真实有效”。它不是测试结果。
 > 只有目标 Linux 原始日志存在时，项目状态才可从 `NOT_RUN_ON_TARGET_LINUX` 改为 `PASS` 或 `FAIL`。
@@ -17,6 +17,11 @@
 | `BLOCKED` | 因环境或外部条件无法执行，必须写明原因 |
 
 每个 PASS 至少需要：Git 提交、执行命令、退出码、原始日志路径和环境记录。
+
+P3 实现提交为 `b0fb0b6`：统一入口 `tools/vled_verify.sh` 会实际检查构建、设备、
+错误码、状态、版本、JSON、并发、bridge UDP、信号退出、重复装卸和内核日志；
+`tools/vled_demo.sh` 负责跨机演示。Windows 侧 14 项 Python 测试和脚本语法检查
+已通过，但在目标 Linux 和跨机链路运行前，P3 只能标记 `IMPLEMENTED_NOT_RUN`。
 
 ## 2. 冻结的驱动行为契约
 
@@ -263,4 +268,4 @@
 |---|---|---|---|---|---|
 | 20260712-1452-windows-p2 | `83caefb` | Windows NT 10.0.26220.0 / Python 3.12.9 | P2 12 项无 GUI 自动测试、人工 GUI T-SIM-01..09、关闭清理 | `PASS / P2_WINDOWS_PASS` | `docs/evidence/20260712-1452-windows-p2/` |
 | 20260712-1427-p1 | `d8c1c0d` | Ubuntu 24.04.4 / 6.17.0-35-generic / GCC 13.3 | P1 PAGE_SIZE、版本、回滚、多 FD、快照、JSON、装卸 | `PASS` | `docs/evidence/20260712-1427-ubuntu-6.17.0-35-generic-p1/` |
-| 待运行 | 待定 | 见 `LINUX_ENVIRONMENT.md` | P3 跨机 UDP 及后续 | `NOT_RUN_ON_TARGET_LINUX` | 待创建 |
+| P3-target-pending | `b0fb0b6` | 见 `LINUX_ENVIRONMENT.md` | P3 构建、业务、边界、并发、生命周期、bridge 与跨机 UDP | `IMPLEMENTED_NOT_RUN` | 运行说明：`docs/P3_LINUX_RUNBOOK.md` |

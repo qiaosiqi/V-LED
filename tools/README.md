@@ -27,11 +27,13 @@ Windows 模拟器要求收到 UTF-8 编码的 JSON，且字段 `type` 必须为 
 
 ## B 部分负责内容
 
-B 部分位于 Linux 虚拟机用户态，包含三个程序：
+B 部分位于 Linux 虚拟机用户态，包含程序和自动化入口：
 
 1. `vled_cli`：直接操作 `/dev/vled`，测试驱动的 `open/read/write/close`。
 2. `vled_bridge`：读取 `/dev/vled` 返回的 JSON 状态字符串，并通过 UDP 发送给 Windows 主机上的 VLED 模拟器。
 3. `vled_fd_probe`：P1 自动验收探针，检查 PAGE_SIZE 边界、多 FD 独立偏移、稳定快照和失败原子回滚。
+4. `vled_verify.sh`：P3 统一验收入口，负责严格构建、bridge 黑盒测试、模块生命周期、业务/错误码/并发回归和内核日志检查。
+5. `vled_demo.sh`：Linux→Windows 可复现演示编排；任一步失败都会停止。
 
 驱动本身不直接联网，网络转发放在用户态 `vled_bridge` 程序中完成。
 
@@ -108,6 +110,32 @@ sudo chmod 666 /dev/vled
 读取、更新期间的旧快照稳定性、失败命令对状态/版本/偏移/快照的回滚，
 以及 JSON 转义。全部通过时退出码为 0；任何检查失败时退出码为 1。
 
+## P3 自动验收
+
+先确认旧 `vled` 模块没有加载，然后执行：
+
+```bash
+./tools/vled_verify.sh
+```
+
+可通过环境变量调整设备、并发迭代和装卸轮数：
+
+```bash
+VLED_DEVICE=/dev/vled VLED_ITERATIONS=500 VLED_LIFECYCLE_CYCLES=5 \
+    ./tools/vled_verify.sh
+```
+
+脚本拒绝直接替换已经加载的模块，失败时返回非零，并通过 trap 尝试清理本轮加载
+的模块。原始日志采集、退出码保留和跨机演示步骤见
+`docs/P3_LINUX_RUNBOOK.md`。
+
+也可以在已加载且普通用户可读写的设备上单独运行用户态验收：
+
+```bash
+python3 tools/vled_verify.py --device /dev/vled --iterations 200
+python3 tools/vled_bridge_probe.py --bridge tools/vled_bridge
+```
+
 ## UDP 桥接测试
 
 Windows 模拟器 `simulator/vled_sim.py` 使用 UDP：
@@ -138,6 +166,22 @@ data, addr = udp_socket.recvfrom(2048)
 - `9000`：Windows VLED 模拟器 UDP 监听端口。
 - `/dev/vled`：Linux 字符设备节点。
 - `500`：轮询间隔，单位毫秒。
+
+IP、端口和间隔均严格校验；非法参数返回非零，不会静默退回默认值。bridge 仅
+发送满足驱动规范完整字段、JSON 结构和值域的 canonical state；无效内容会记录
+`skip non-state payload`，不会生成伪成功发送日志。SIGINT/SIGTERM 会使进程清理
+socket 并退出。
+
+## 跨机演示
+
+Windows 启动 `simulator/vled_sim.py` 后，在 Linux 执行：
+
+```bash
+./tools/vled_demo.sh 192.168.57.1 /dev/vled
+```
+
+脚本依次演示 TEXT、COLOR、BRIGHTNESS、MODE、中文和 CLEAR，并在退出时终止
+bridge。它不会加载模块或修改设备权限；这些前置动作由操作者显式完成。
 
 ## 报告可写说明
 
