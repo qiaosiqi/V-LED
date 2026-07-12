@@ -1,6 +1,6 @@
 # V-LED 实验四可执行验收矩阵
 
-> 状态：`SPEC_FROZEN / P1_TARGET_LINUX_PASS / P2_WINDOWS_AUTOMATED_PASS_GUI_REVIEW_PENDING`
+> 状态：`SPEC_FROZEN / P1_TARGET_LINUX_PASS / P2_WINDOWS_PASS / P3_NOT_AUTHORIZED`
 >
 > 本文档冻结“应该实现什么、怎样证明实现真实有效”。它不是测试结果。
 > 只有目标 Linux 原始日志存在时，项目状态才可从 `NOT_RUN_ON_TARGET_LINUX` 改为 `PASS` 或 `FAIL`。
@@ -229,8 +229,10 @@
 - `python -m unittest discover -s simulator/tests -v` 在 Windows Python 3.12.9 下运行 12 项，全部通过。
 - 测试包含真实 `127.0.0.1` 临时 UDP 端口收发、无效 JSON 拒绝、socket 关闭和非 daemon 接收线程及时退出。
 - 临时把 `blink` 加入允许模式后，非法 mode 负面测试以退出码 1 失败；恢复正确实现后 12 项再次全部通过。mutation 未提交。
-- GUI 进程能够启动并创建“虚拟 LED 模拟器”窗口；自动窗口捕获却返回了其他应用画面，因此没有对不一致句柄执行输入，人工视觉/交互门禁保持 `GUI_REVIEW_PENDING`。
-- 上述结果只证明 Windows 自动检查，不替代 P3/P4 的跨机 UDP 和目标 Linux 证据。
+- GUI 人工复核完成：合法 static/scroll 完整更新；非 JSON 和越界亮度被拒绝且无部分更新；手动颜色/亮度覆盖保留最新 UDP 值并可立即恢复。
+- 本地预览清屏未伪装为驱动 CLEAR；240 个无效报文后日志严格限制为 200 条；300 个高频状态后界面无冻结并收敛到最终版本。
+- 关闭窗口后模拟器进程退出且 UDP 9000 不再监听。T-SIM-01..09 全部通过，证据见 `docs/evidence/20260712-1452-windows-p2/`。
+- 上述结果关闭 P2 Windows 门禁，但不替代 P3/P4 的 Linux→Windows 跨机 UDP 和目标 Linux 证据。
 
 ## 11. P5 poll + wait queue 扩展验收
 
@@ -259,6 +261,6 @@
 
 | 运行编号 | Git 提交 | Linux 环境 | 测试范围 | 结果 | 原始证据目录 |
 |---|---|---|---|---|---|
-| Windows-20260712 | `47dadca` | Windows Python 3.12.9 | P2 无 GUI 自动测试 | `AUTOMATED_PASS / GUI_REVIEW_PENDING` | 本轮终端输出，尚未固化到 P4 证据目录 |
+| 20260712-1452-windows-p2 | `83caefb` | Windows NT 10.0.26220.0 / Python 3.12.9 | P2 12 项无 GUI 自动测试、人工 GUI T-SIM-01..09、关闭清理 | `PASS / P2_WINDOWS_PASS` | `docs/evidence/20260712-1452-windows-p2/` |
 | 20260712-1427-p1 | `d8c1c0d` | Ubuntu 24.04.4 / 6.17.0-35-generic / GCC 13.3 | P1 PAGE_SIZE、版本、回滚、多 FD、快照、JSON、装卸 | `PASS` | `docs/evidence/20260712-1427-ubuntu-6.17.0-35-generic-p1/` |
-| 待运行 | 待定 | 见 `LINUX_ENVIRONMENT.md` | P2 GUI、P3 及后续 | `NOT_RUN_ON_TARGET_LINUX` | 待创建 |
+| 待运行 | 待定 | 见 `LINUX_ENVIRONMENT.md` | P3 跨机 UDP 及后续 | `NOT_RUN_ON_TARGET_LINUX` | 待创建 |

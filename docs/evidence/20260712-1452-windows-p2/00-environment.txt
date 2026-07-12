@@ -1,0 +1,8 @@
+P2 Windows GUI acceptance environment
+Captured: 2026-07-12T14:57:39.8461217+08:00
+OS: Microsoft Windows NT 10.0.26220.0
+Python: 3.12.9
+Git commit tested: 83caefb1cf88eb35c41dd134020280b0ea5e3537
+Branch: integration-promote-try
+Simulator: simulator/vled_sim.py
+UDP endpoint: 127.0.0.1:9000

@@ -1,0 +1,4 @@
+Post-GUI-close cleanup check
+Captured: 2026-07-12T14:57:39.8461217+08:00
+simulator python process: NOT RUNNING
+UDP 9000 endpoint: NOT LISTENING
