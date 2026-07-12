@@ -58,6 +58,11 @@ def main() -> int:
         2,
         "T-ROLLBACK must use nonblocking reads at both P5 EOF checks",
     )
+    require(
+        fd_probe,
+        r'read_exact_fd\("T-FD-03"[\s\S]*?expected_rest',
+        "T-FD-03 must stop at the old snapshot boundary under P5",
+    )
 
     print("PASS P5 static contract: wait queue, poll, blocking read and bridge")
     return 0

@@ -132,6 +132,31 @@ static int read_all_fd(const char *id, int fd, char *output, size_t capacity,
     return (int)used;
 }
 
+static int read_exact_fd(const char *id, int fd, char *output, size_t size,
+                         size_t chunk_size)
+{
+    size_t used = 0;
+
+    while (used < size) {
+        size_t request = chunk_size < size - used ? chunk_size : size - used;
+        ssize_t count = read(fd, output + used, request);
+
+        if (count <= 0) {
+            char message[256];
+
+            if (count < 0)
+                snprintf(message, sizeof(message), "read: %s", strerror(errno));
+            else
+                snprintf(message, sizeof(message),
+                         "early EOF: expected %zu more bytes", size - used);
+            fail(id, message);
+            return -1;
+        }
+        used += (size_t)count;
+    }
+    return (int)used;
+}
+
 static int read_state(const char *id, const char *dev, char *output)
 {
     int fd = open_checked(id, dev, O_RDONLY | O_NONBLOCK);
@@ -381,6 +406,7 @@ static void test_multifd_snapshot(const char *dev)
     int fd_a;
     int fd_b;
     int rest;
+    size_t expected_rest;
     int ok = 1;
 
     if (write_command("T-FD-03", dev, "TEXT snapshot-old") < 0 ||
@@ -412,8 +438,9 @@ static void test_multifd_snapshot(const char *dev)
     memcpy(reconstructed, prefix_a, (size_t)first_a);
     if (write_command("T-FD-03", dev, "TEXT snapshot-new") < 0)
         ok = 0;
-    rest = read_all_fd("T-FD-03", fd_a, reconstructed + first_a,
-                       sizeof(reconstructed) - (size_t)first_a, 7);
+    expected_rest = strlen(old_state) - (size_t)first_a;
+    rest = read_exact_fd("T-FD-03", fd_a, reconstructed + first_a,
+                         expected_rest, 7);
     close(fd_a);
     if (rest >= 0) {
         reconstructed[first_a + rest] = '\0';
