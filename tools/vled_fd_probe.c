@@ -346,7 +346,9 @@ static void test_atomic_rollback(const char *dev, size_t page_size)
         ok = 0;
     }
 
-    fd = open_checked("T-ROLLBACK", dev, O_RDWR);
+    /* P5 blocks at an exhausted snapshot; use nonblocking mode so this
+     * rollback check can assert EAGAIN instead of waiting for a new version. */
+    fd = open_checked("T-ROLLBACK", dev, O_RDWR | O_NONBLOCK);
     if (fd >= 0) {
         if (read_all_fd("T-ROLLBACK", fd, consumed, sizeof(consumed), 31) < 0)
             ok = 0;

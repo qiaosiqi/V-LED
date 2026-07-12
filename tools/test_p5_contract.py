@@ -21,12 +21,18 @@ def reject(text: str, pattern: str, message: str) -> None:
         raise AssertionError(message)
 
 
+def require_count(text: str, pattern: str, expected: int, message: str) -> None:
+    if len(re.findall(pattern, text, re.MULTILINE)) != expected:
+        raise AssertionError(message)
+
+
 def main() -> int:
     driver = (ROOT / "driver" / "vled.c").read_text(encoding="utf-8")
     bridge = (ROOT / "tools" / "vled_bridge.c").read_text(encoding="utf-8")
     probe = (ROOT / "tools" / "vled_poll_probe.c").read_text(encoding="utf-8")
     bridge_probe = (ROOT / "tools" / "vled_bridge_probe.py").read_text(
         encoding="utf-8")
+    fd_probe = (ROOT / "tools" / "vled_fd_probe.c").read_text(encoding="utf-8")
 
     for test_id in range(1, 8):
         require(probe, rf"T-POLL-0{test_id}", f"missing T-POLL-0{test_id}")
@@ -46,6 +52,12 @@ def main() -> int:
     reject(bridge, r"\bread_vled_once\s*\(",
            "bridge still reopens the device for every sample")
     reject(bridge, r"\busleep\s*\(", "bridge still performs periodic polling")
+    require_count(
+        fd_probe,
+        r'open_checked\("T-ROLLBACK", dev, O_RDWR \| O_NONBLOCK\)',
+        2,
+        "T-ROLLBACK must use nonblocking reads at both P5 EOF checks",
+    )
 
     print("PASS P5 static contract: wait queue, poll, blocking read and bridge")
     return 0
