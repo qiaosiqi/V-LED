@@ -645,6 +645,7 @@ tools: make the bridge event driven
 | 2026-07-12 | 用户授权以 `cf2a6c2` 为起点启动 P5 | P4 已关闭；保持冻结的 PAGE_SIZE、per-open offset、稳定快照、原子回滚和 version 语义 | 已授权 |
 | 2026-07-12 | P5 先提交失败测试 `eda12b6`，再提交驱动 `9f43557` 与工具 `568c263` | P4 基线被静态契约明确拒绝；T-POLL-01..08 覆盖 poll、阻塞/非阻塞 read、EAGAIN、信号、虚假/无意义唤醒、高频写入与最终状态 | `P5_WINDOWS_STATIC_PASS / NOT_RUN_TARGET_LINUX` |
 | 2026-07-12 | P5 首次目标运行在 P1 `T-ROLLBACK` 前停滞 | `strace` 证明探针第二个 FD 仍以阻塞 `O_RDWR` 打开；读完快照后驱动按 P5 语义正确等待新版本。修复为 `O_RDWR | O_NONBLOCK` 并继续断言 `EAGAIN`，失败日志保留 | 测试适配修复中 |
+| 2026-07-12 | P5 第二次目标运行 T-POLL-01..08 全过，P1 `T-FD-03` 失败 | P1 helper 在完整旧快照后额外读取，跨入已经就绪的新版本并把两个快照拼接比较；改为按旧快照已知剩余长度精确读取，继续验证旧快照内部不混合 | 测试适配修复中；P5 尚未关闭 |
 
 ## 10. 当前检查点
 
