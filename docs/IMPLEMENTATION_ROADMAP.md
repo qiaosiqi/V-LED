@@ -655,6 +655,7 @@ tools: make the bridge event driven
 | 2026-07-13 | 新建 `docs/操作系统课程设计报告2026-P7正文稿.docx`，Word 原生更新目录并导出 49 页 QA PDF | 9 章正文、7 幅机制图、2 张正式证据截图、代码清单、P1-P6 结果、失败修复链、日志边界、三份 500 字以上心得复核稿和附录均已填充；49 页逐页无裁切/重叠/丢图 | `P7_CONTENT_PASS` |
 | 2026-07-13 | `a6c517c` 固化 P8 排版稿和 51 页 PDF | Word 原生目录、题注、REF/PAGEREF、9 图、22 表、无障碍与 51 页人工逐页复核均通过 | `P8_LAYOUT_PASS` |
 | 2026-07-13 | 用户授权以 `a6c517c` 为起点启动 P9 | 执行最终回归、非开发成员盲演、故障恢复和交付污染检查；目标 Linux/Windows 结果必须来自真实原始输出 | `P9_AUTHORIZED_IN_PROGRESS` |
+| 2026-07-13 | P9 第一次目标 Linux 回传中完整功能输出到达最终 PASS，但 `$evidence` 未初始化导致 `tee /01-final-verify.log` 权限失败 | 20 轮生命周期、P1/P3/P5 和所示内核区间输出均通过；缺环境日志、显式退出码、cleanup 后检查、故障彩排和 Windows 盲演，原始粘贴按 SHA-256 固化 | `FUNCTIONAL_OUTPUT_PASS / EVIDENCE_CAPTURE_FAIL / P9_NOT_CLOSED` |
 
 ## 10. 当前检查点
 
@@ -702,6 +703,8 @@ tools: make the bridge event driven
 - [x] P9 Windows 本机预检通过：Python 3.12.9 模拟器回归 17/17、P5 静态契约、全部 Python 编译、CLI/FD/poll C 严格语法和 shell 语法检查退出码均为 0。
 - [x] P9 交付预检通过：既有证据清单 54 项 SHA-256 全匹配；P8 DOCX 容器、9 个媒体对象、427 个字段、无批注/修订和无障碍 0 项检查通过；PDF 为未加密 51 页 A4。
 - [x] P9 仓库污染预检通过：无被跟踪构建产物、Word 锁文件、失效 Markdown 相对链接或敏感凭据命中；本轮生成的 `__pycache__` 已清理。
+- [x] P9 第一次目标 Linux 回传显示严格构建、P1/P3/P5、500 次并发、20 轮生命周期和验收器内核区间实际输出通过；原始粘贴已按哈希固化。
+- [ ] P9 第一次目标 Linux 回传因 `evidence` 变量未初始化导致 tee 失败，不能作为最终证据批次；须使用新运行编号完整重跑。
 - [ ] P9 目标 Linux 最终回归、故障恢复和非开发成员 Windows 盲演尚待真实执行与原始输出回传，不得标记 PASS。
 
 ### 当前阻塞/门禁

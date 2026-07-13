@@ -100,6 +100,11 @@ test ! -e /dev/vled && echo '/dev/vled: absent'
 构建、bridge 黑盒、P1 边界/多 FD、业务、并发、poll/wait queue 和内核日志检查。
 
 ```bash
+if [[ -z ${evidence:-} || -z ${run_start:-} || ! -d "${evidence:-/nonexistent}" ]]; then
+    echo 'P9 evidence variables are not initialized; run section 2 first.' >&2
+    exit 2
+fi
+
 VLED_ITERATIONS=500 VLED_LIFECYCLE_CYCLES=20 \
     ./tools/vled_verify.sh 2>&1 | tee "$evidence/01-final-verify.log"
 verify_rc=${PIPESTATUS[0]}
