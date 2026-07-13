@@ -105,9 +105,13 @@ Linux 跨机演示：
 
 ## 6. 验收状态与后续门禁
 
-P1–P5 已通过；P5 正式证据位于
-`docs/evidence/20260712-2127-ubuntu-6.17.0-35-generic-p5/`。P6 只统一文档和
-演示资料，不改变以上语义。P6 完成前不进入 P7，也不修改课程设计报告。
+P1–P6 目标环境验收已通过；P5/P6 正式证据分别位于
+`docs/evidence/20260712-2127-ubuntu-6.17.0-35-generic-p5/` 与
+`docs/evidence/20260712-2147-ubuntu-6.17.0-35-generic-p6/`。P7 内容和 P8 的
+51 页报告版式已关闭。用户已授权以 `a6c517c` 为起点执行 P9；只有目标 Linux
+最终回归、非开发成员 Windows 盲演、故障恢复和彩排原始输出全部通过后才能关闭。
+
+P9 命令、预期结果和原始输出清单见 `docs/P9_FINAL_RUNBOOK.md`。
 
 Linux 只测试已提交并普通 fast-forward 推送到 `origin/integration-promote-try`
 的明确哈希；禁止 force push。常见故障和最短操作路径见根 `README.md`。
