@@ -1,0 +1,34 @@
+2026-07-12T14:31:37+08:00
+Linux siqi 6.17.0-35-generic #35~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue May 26 19:30:42 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
+gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+## integration-promote-try...origin/integration-promote-try
+?? driver/..module-common.o.cmd
+?? driver/.Module.symvers.cmd
+?? driver/.module-common.o
+?? driver/.modules.order.cmd
+?? driver/.vled.ko.cmd
+?? driver/.vled.mod.cmd
+?? driver/.vled.mod.o.cmd
+?? driver/.vled.o.cmd
+?? driver/Module.symvers
+?? driver/modules.order
+?? driver/vled.ko
+?? driver/vled.mod
+?? driver/vled.mod.c
+?? driver/vled.mod.o
+?? driver/vled.o
+?? get_env.sh
+?? get_env_2.sh
+?? tools/vled_bridge
+?? tools/vled_cli
+?? tools/vled_fd_probe
+d8c1c0dcd451c78a3df4d96730267fad16d89e4c
+filename:       /home/siqi/siqi_ws/V-LED/driver/vled.ko
+description:    Virtual LED Linux character device driver
+author:         VLED Team Member A
+license:        GPL
+srcversion:     653C554B60173C369C367D0
+depends:        
+name:           vled
+retpoline:      Y
+vermagic:       6.17.0-35-generic SMP preempt mod_unload modversions 

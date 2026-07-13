@@ -1,0 +1,48 @@
+make: 进入目录“/home/siqi/siqi_ws/V-LED/driver”
+make -C /lib/modules/6.17.0-35-generic/build M=/home/siqi/siqi_ws/V-LED/driver modules
+make[1]: 进入目录“/usr/src/linux-headers-6.17.0-35-generic”
+make  -C /home/siqi/siqi_ws/V-LED/driver \
+-f /usr/src/linux-headers-6.17.0-35-generic/Makefile modules
+make[2]: 进入目录“/home/siqi/siqi_ws/V-LED/driver”
+make --no-print-directory -C /home/siqi/siqi_ws/V-LED/driver \
+-f /usr/src/linux-headers-6.17.0-35-generic/Makefile modules
+warning: the compiler differs from the one used to build the kernel
+  The kernel was built by: x86_64-linux-gnu-gcc-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+  You are using:           gcc-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+make -f /usr/src/linux-headers-6.17.0-35-generic/scripts/Makefile.build obj=. need-builtin=1 need-modorder=1 
+# CC [M]  vled.o
+  gcc-13 -Wp,-MMD,./.vled.o.d -nostdinc -I/usr/src/linux-headers-6.17.0-35-generic/arch/x86/include -I/usr/src/linux-headers-6.17.0-35-generic/arch/x86/include/generated -I/usr/src/linux-headers-6.17.0-35-generic/include -I/usr/src/linux-headers-6.17.0-35-generic/include -I/usr/src/linux-headers-6.17.0-35-generic/arch/x86/include/uapi -I/usr/src/linux-headers-6.17.0-35-generic/arch/x86/include/generated/uapi -I/usr/src/linux-headers-6.17.0-35-generic/include/uapi -I/usr/src/linux-headers-6.17.0-35-generic/include/generated/uapi -include /usr/src/linux-headers-6.17.0-35-generic/include/linux/compiler-version.h -include /usr/src/linux-headers-6.17.0-35-generic/include/linux/kconfig.h -I/usr/src/linux-headers-6.17.0-35-generic/ubuntu/include -include /usr/src/linux-headers-6.17.0-35-generic/include/linux/compiler_types.h -D__KERNEL__ -std=gnu11 -fshort-wchar -funsigned-char -fno-common -fno-PIE -fno-strict-aliasing -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -mno-avx -mno-sse4a -fcf-protection=none -m64 -falign-jumps=1 -falign-loops=1 -mno-80387 -mno-fp-ret-in-387 -mpreferred-stack-boundary=3 -mskip-rax-setup -march=x86-64 -mtune=generic -mno-red-zone -mcmodel=kernel -mstack-protector-guard-reg=gs -mstack-protector-guard-symbol=__ref_stack_chk_guard -Wno-sign-compare -fno-asynchronous-unwind-tables -mindirect-branch=thunk-extern -mindirect-branch-register -mindirect-branch-cs-prefix -mfunction-return=thunk-extern -fno-jump-tables -mharden-sls=all -fpatchable-function-entry=16,16 -fno-delete-null-pointer-checks -O2 -fno-allow-store-data-races -fstack-protector-strong -fno-omit-frame-pointer -fno-optimize-sibling-calls -ftrivial-auto-var-init=zero -fno-stack-clash-protection -fzero-call-used-regs=used-gpr -pg -mrecord-mcount -mfentry -DCC_USING_FENTRY -falign-functions=16 -fstrict-flex-arrays=3 -fno-strict-overflow -fno-stack-check -fconserve-stack -fno-builtin-wcslen -Wall -Wextra -Wundef -Werror=implicit-function-declaration -Werror=implicit-int -Werror=return-type -Werror=strict-prototypes -Wno-format-security -Wno-trigraphs -Wno-frame-address -Wno-address-of-packed-member -Wmissing-declarations -Wmissing-prototypes -Wframe-larger-than=1024 -Wno-main -Wno-dangling-pointer -Wvla-larger-than=1 -Wno-pointer-sign -Wcast-function-type -Wno-array-bounds -Wno-stringop-overflow -Wno-alloc-size-larger-than -Wimplicit-fallthrough=5 -Werror=date-time -Werror=incompatible-pointer-types -Werror=designated-init -Wenum-conversion -Wunused -Wno-unused-but-set-variable -Wno-unused-const-variable -Wno-packed-not-aligned -Wno-format-overflow -Wno-format-truncation -Wno-stringop-truncation -Wno-override-init -Wno-missing-field-initializers -Wno-type-limits -Wno-shift-negative-value -Wno-maybe-uninitialized -Wno-sign-compare -Wno-unused-parameter -g -gdwarf-5  -fsanitize=bounds-strict -fsanitize=shift -fsanitize=bool -fsanitize=enum    -DMODULE  -DKBUILD_BASENAME='"vled"' -DKBUILD_MODNAME='"vled"' -D__KBUILD_MODNAME=kmod_vled -c -o vled.o vled.c   ; /usr/src/linux-headers-6.17.0-35-generic/tools/objtool/objtool --hacks=jump_label --hacks=noinstr --hacks=skylake --retpoline --rethunk --sls --stackval --static-call --uaccess --prefix=16 --Werror   --module vled.o
+vled.c:102:44: error: function declaration isn’t a prototype [-Werror=strict-prototypes]
+  102 | static int vled_parse_command(const struct vled_state *current,
+      |                                            ^~~~~~~~~~
+vled.c: In function ‘vled_write’:
+vled.c:394:34: error: passing argument 1 of ‘vled_parse_command’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  394 |         ret = vled_parse_command(&vled.state, command, &candidate, &changed);
+      |                                  ^~~~~~~~~~~
+      |                                  |
+      |                                  struct vled_state *
+In file included from /usr/src/linux-headers-6.17.0-35-generic/include/linux/mutex.h:14,
+                 from /usr/src/linux-headers-6.17.0-35-generic/include/linux/kernfs.h:11,
+                 from /usr/src/linux-headers-6.17.0-35-generic/include/linux/sysfs.h:16,
+                 from /usr/src/linux-headers-6.17.0-35-generic/include/linux/kobject.h:20,
+                 from /usr/src/linux-headers-6.17.0-35-generic/include/linux/cdev.h:5,
+                 from vled.c:1:
+/usr/src/linux-headers-6.17.0-35-generic/arch/x86/include/asm/current.h:28:17: note: expected ‘const struct vled_state * (*)()’ but argument is of type ‘struct vled_state *’
+   28 | #define current get_current()
+vled.c:102:56: note: in expansion of macro ‘current’
+  102 | static int vled_parse_command(const struct vled_state *current,
+      |                                                        ^~~~~~~
+vled.c: At top level:
+vled.c:436:19: error: ‘no_llseek’ undeclared here (not in a function); did you mean ‘noop_llseek’?
+  436 |         .llseek = no_llseek,
+      |                   ^~~~~~~~~
+      |                   noop_llseek
+cc1: some warnings being treated as errors
+make[4]: *** [/usr/src/linux-headers-6.17.0-35-generic/scripts/Makefile.build:287：vled.o] 错误 1
+make[3]: *** [/usr/src/linux-headers-6.17.0-35-generic/Makefile:2016：.] 错误 2
+make[2]: *** [/usr/src/linux-headers-6.17.0-35-generic/Makefile:248：__sub-make] 错误 2
+make[2]: 离开目录“/home/siqi/siqi_ws/V-LED/driver”
+make[1]: *** [Makefile:248：__sub-make] 错误 2
+make[1]: 离开目录“/usr/src/linux-headers-6.17.0-35-generic”
+make: *** [Makefile:7：all] 错误 2
+make: 离开目录“/home/siqi/siqi_ws/V-LED/driver”

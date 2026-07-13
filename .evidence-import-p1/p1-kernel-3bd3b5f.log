@@ -1,0 +1,120 @@
+[日 7月 12 07:53:52 2026] loop5: detected capacity change from 0 to 22176
+[日 7月 12 07:53:52 2026] loop6: detected capacity change from 0 to 1152
+[日 7月 12 07:53:52 2026] loop7: detected capacity change from 0 to 1088256
+[日 7月 12 07:53:52 2026] loop8: detected capacity change from 0 to 37864
+[日 7月 12 07:53:52 2026] audit: type=1400 audit(1783403898.626:2): apparmor="STATUS" operation="profile_load" profile="unconfined" name="Discord" pid=478 comm="apparmor_parser"
+[日 7月 12 07:53:52 2026] audit: type=1400 audit(1783403898.627:3): apparmor="STATUS" operation="profile_load" profile="unconfined" name="QtWebEngineProcess" pid=480 comm="apparmor_parser"
+[日 7月 12 07:53:52 2026] audit: type=1400 audit(1783403898.627:4): apparmor="STATUS" operation="profile_load" profile="unconfined" name="1password" pid=476 comm="apparmor_parser"
+[日 7月 12 07:53:52 2026] audit: type=1400 audit(1783403898.628:5): apparmor="STATUS" operation="profile_load" profile="unconfined" name=4D6F6E676F444220436F6D70617373 pid=479 comm="apparmor_parser"
+[日 7月 12 07:53:52 2026] audit: type=1400 audit(1783403898.630:6): apparmor="STATUS" operation="profile_load" profile="unconfined" name="balena-etcher" pid=494 comm="apparmor_parser"
+[日 7月 12 07:53:52 2026] audit: type=1400 audit(1783403898.632:7): apparmor="STATUS" operation="profile_load" profile="unconfined" name="brave" pid=496 comm="apparmor_parser"
+[日 7月 12 07:53:52 2026] audit: type=1400 audit(1783403898.636:8): apparmor="STATUS" operation="profile_load" profile="unconfined" name="buildah" pid=497 comm="apparmor_parser"
+[日 7月 12 07:53:52 2026] audit: type=1400 audit(1783403898.639:9): apparmor="STATUS" operation="profile_load" profile="unconfined" name="busybox" pid=499 comm="apparmor_parser"
+[日 7月 12 07:53:52 2026] audit: type=1400 audit(1783403898.639:10): apparmor="STATUS" operation="profile_load" profile="unconfined" name="ch-checkns" pid=501 comm="apparmor_parser"
+[日 7月 12 07:53:52 2026] audit: type=1400 audit(1783403898.641:11): apparmor="STATUS" operation="profile_load" profile="unconfined" name="ch-run" pid=502 comm="apparmor_parser"
+[日 7月 12 07:53:53 2026] vmw_vmci 0000:00:07.7: MMIO register access is available
+[日 7月 12 07:53:53 2026] vmw_vmci 0000:00:07.7: Using capabilities 0x3c
+[日 7月 12 07:53:53 2026] Guest personality initialized and is active
+[日 7月 12 07:53:53 2026] VMCI host device registered (name=vmci, major=10, minor=261)
+[日 7月 12 07:53:53 2026] Initialized host personality
+[日 7月 12 07:53:53 2026] NET: Registered PF_VSOCK protocol family
+[日 7月 12 07:53:54 2026] NET: Registered PF_QIPCRTR protocol family
+[日 7月 12 07:53:55 2026] piix4_smbus 0000:00:07.3: SMBus Host Controller not enabled!
+[日 7月 12 07:53:55 2026] loop9: detected capacity change from 0 to 8
+[日 7月 12 07:53:55 2026] e1000: ens33 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
+[日 7月 12 07:53:58 2026] rfkill: input handler disabled
+[日 7月 12 07:53:59 2026] ------------[ cut here ]------------
+[日 7月 12 07:53:59 2026] WARNING: CPU: 1 PID: 310 at drivers/gpu/drm/vmwgfx/vmwgfx_bo.c:77 vmw_bo_free+0x41/0x60 [vmwgfx]
+[日 7月 12 07:53:59 2026] Modules linked in: snd_seq_dummy snd_hrtimer intel_rapl_msr intel_rapl_common polyval_clmulni ghash_clmulni_intel vmw_balloon aesni_intel snd_ens1371 snd_ac97_codec gameport ac97_bus snd_pcm snd_seq_midi snd_seq_midi_event snd_rawmidi snd_seq snd_seq_device snd_timer snd i2c_piix4 qrtr soundcore i2c_smbus vsock_loopback vmw_vsock_virtio_transport_common vmw_vsock_vmci_transport vsock binfmt_misc vmw_vmci joydev input_leds mac_hid serio_raw sch_fq_codel vmwgfx drm_ttm_helper ttm msr parport_pc ppdev lp parport efi_pstore nfnetlink dmi_sysfs ip_tables x_tables autofs4 hid_generic usbhid hid psmouse vga16fb vgastate mptspi mptscsih ahci mptbase libahci e1000 pata_acpi scsi_transport_spi floppy
+[日 7月 12 07:53:59 2026] CPU: 1 UID: 0 PID: 310 Comm: plymouthd Not tainted 6.17.0-35-generic #35~24.04.1-Ubuntu PREEMPT(voluntary) 
+[日 7月 12 07:53:59 2026] Hardware name: VMware, Inc. VMware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00 11/12/2020
+[日 7月 12 07:53:59 2026] RIP: 0010:vmw_bo_free+0x41/0x60 [vmwgfx]
+[日 7月 12 07:53:59 2026] Code: 75 28 48 89 df e8 ef fd ff ff 48 83 bb 88 02 00 00 00 75 1a 48 89 df e8 8d 2e a8 c9 48 8b 5d f8 c9 31 c0 31 ff e9 3a 40 43 c9 <0f> 0b eb d4 0f 0b 48 89 df e8 71 2e a8 c9 48 8b 5d f8 c9 31 c0 31
+[日 7月 12 07:53:59 2026] RSP: 0018:ffffd1f9c114fbf0 EFLAGS: 00010286
+[日 7月 12 07:53:59 2026] RAX: ffff89da88c278c0 RBX: ffff89da831fa400 RCX: 0000000000000000
+[日 7月 12 07:53:59 2026] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff89da831fa400
+[日 7月 12 07:53:59 2026] RBP: ffffd1f9c114fbf8 R08: 0000000000000000 R09: 0000000000000000
+[日 7月 12 07:53:59 2026] R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
+[日 7月 12 07:53:59 2026] R13: ffff89da84f50628 R14: ffff89da831fa400 R15: ffff89da831fa500
+[日 7月 12 07:53:59 2026] FS:  0000000000000000(0000) GS:ffff89db2b6e2000(0000) knlGS:0000000000000000
+[日 7月 12 07:53:59 2026] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[日 7月 12 07:53:59 2026] CR2: 0000797508bb1788 CR3: 0000000058e40000 CR4: 0000000000350ef0
+[日 7月 12 07:53:59 2026] Call Trace:
+[日 7月 12 07:53:59 2026]  <TASK>
+[日 7月 12 07:53:59 2026]  ttm_bo_release+0x70/0x2d0 [ttm]
+[日 7月 12 07:53:59 2026]  ? srso_alias_return_thunk+0x5/0xfbef5
+[日 7月 12 07:53:59 2026]  ? srso_alias_return_thunk+0x5/0xfbef5
+[日 7月 12 07:53:59 2026]  ttm_bo_put+0x3c/0x70 [ttm]
+[日 7月 12 07:53:59 2026]  vmw_gem_object_free+0x13/0x30 [vmwgfx]
+[日 7月 12 07:53:59 2026]  drm_gem_object_handle_put_unlocked+0x12c/0x140
+[日 7月 12 07:53:59 2026]  drm_gem_object_release_handle+0x5b/0xc0
+[日 7月 12 07:53:59 2026]  ? __pfx_drm_gem_object_release_handle+0x10/0x10
+[日 7月 12 07:53:59 2026]  idr_for_each+0x70/0xf0
+[日 7月 12 07:53:59 2026]  drm_gem_release+0x20/0x40
+[日 7月 12 07:53:59 2026]  drm_file_free+0x1e9/0x290
+[日 7月 12 07:53:59 2026]  drm_release+0xb3/0x140
+[日 7月 12 07:53:59 2026]  __fput+0xed/0x2d0
+[日 7月 12 07:53:59 2026]  ____fput+0x15/0x20
+[日 7月 12 07:53:59 2026]  task_work_run+0x60/0xa0
+[日 7月 12 07:53:59 2026]  do_exit+0x1fa/0x480
+[日 7月 12 07:53:59 2026]  do_group_exit+0x34/0x90
+[日 7月 12 07:53:59 2026]  __x64_sys_exit_group+0x18/0x20
+[日 7月 12 07:53:59 2026]  x64_sys_call+0x2678/0x2680
+[日 7月 12 07:53:59 2026]  do_syscall_64+0x80/0xa20
+[日 7月 12 07:53:59 2026]  ? srso_alias_return_thunk+0x5/0xfbef5
+[日 7月 12 07:53:59 2026]  ? irqentry_exit+0x43/0x50
+[日 7月 12 07:53:59 2026]  ? srso_alias_return_thunk+0x5/0xfbef5
+[日 7月 12 07:53:59 2026]  ? exc_page_fault+0x90/0x1b0
+[日 7月 12 07:53:59 2026]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+[日 7月 12 07:53:59 2026] RIP: 0033:0x797509ec821d
+[日 7月 12 07:53:59 2026] Code: Unable to access opcode bytes at 0x797509ec81f3.
+[日 7月 12 07:53:59 2026] RSP: 002b:00007ffc983c3d58 EFLAGS: 00000206 ORIG_RAX: 00000000000000e7
+[日 7月 12 07:53:59 2026] RAX: ffffffffffffffda RBX: 0000797509fdefa8 RCX: 0000797509ec821d
+[日 7月 12 07:53:59 2026] RDX: 00000000000000e7 RSI: ffffffffffffff88 RDI: 0000000000000000
+[日 7月 12 07:53:59 2026] RBP: 00007ffc983c3db0 R08: 00007ffc983c3cf8 R09: 0000000000000007
+[日 7月 12 07:53:59 2026] R10: 0000614b5fcc6170 R11: 0000000000000206 R12: 0000000000000004
+[日 7月 12 07:53:59 2026] R13: 0000000000000000 R14: 0000000000000000 R15: 0000797509fdefc0
+[日 7月 12 07:53:59 2026]  </TASK>
+[日 7月 12 07:53:59 2026] ---[ end trace 0000000000000000 ]---
+[日 7月 12 07:54:22 2026] systemd-journald[379]: /var/log/journal/37cfe852d63146a497a62b15a80aa8a3/user-1000.journal: Journal file uses a different sequence number ID, rotating.
+[日 7月 12 07:54:22 2026] rfkill: input handler enabled
+[日 7月 12 07:54:24 2026] rfkill: input handler disabled
+[日 7月 12 07:54:24 2026] /dev/sr0: Can't open blockdev
+[日 7月 12 07:54:26 2026] input: VMware DnD UInput pointer as /devices/virtual/input/input6
+[日 7月 12 08:55:55 2026] kauditd_printk_skb: 146 callbacks suppressed
+[日 7月 12 08:55:55 2026] audit: type=1400 audit(1783407622.995:158): apparmor="DENIED" operation="open" class="file" profile="snap.firmware-updater.firmware-notifier" name="/proc/sys/vm/max_map_count" pid=3859 comm="firmware-notifi" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+[日 7月 12 09:36:22 2026] perf: interrupt took too long (2872 > 2500), lowering kernel.perf_event_max_sample_rate to 69000
+[日 7月 12 10:06:25 2026] perf: interrupt took too long (3908 > 3590), lowering kernel.perf_event_max_sample_rate to 51000
+[日 7月 12 10:19:03 2026] e1000: ens33 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
+[日 7月 12 10:19:03 2026] audit: type=1400 audit(1783561044.718:159): apparmor="DENIED" operation="open" class="file" profile="snap.firmware-updater.firmware-notifier" name="/proc/sys/vm/max_map_count" pid=6201 comm="firmware-notifi" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+[日 7月 12 10:19:04 2026] perf: interrupt took too long (5359 > 4885), lowering kernel.perf_event_max_sample_rate to 37000
+[日 7月 12 10:23:01 2026] workqueue: e1000_watchdog [e1000] hogged CPU for >10000us 4 times, consider switching to WQ_UNBOUND
+[日 7月 12 10:24:28 2026] perf: interrupt took too long (10170 > 6698), lowering kernel.perf_event_max_sample_rate to 19000
+[日 7月 12 10:25:25 2026] vled: loading out-of-tree module taints kernel.
+[日 7月 12 10:25:25 2026] vled: module verification failed: signature and/or required key missing - tainting kernel
+[日 7月 12 10:25:25 2026] vled: registered /dev/vled major=239 minor=0
+[日 7月 12 10:31:06 2026] e1000: ens33 NIC Link is Down
+[日 7月 12 10:31:12 2026] e1000: ens33 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
+[日 7月 12 10:31:15 2026] e1000: ens33 NIC Link is Down
+[日 7月 12 10:31:21 2026] e1000: ens33 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
+[日 7月 12 10:31:52 2026] workqueue: e1000_watchdog [e1000] hogged CPU for >10000us 5 times, consider switching to WQ_UNBOUND
+[日 7月 12 10:45:50 2026] e1000: ens33 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
+[日 7月 12 10:51:40 2026] e1000: ens33 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
+[日 7月 12 10:51:40 2026] audit: type=1400 audit(1783577051.202:160): apparmor="DENIED" operation="open" class="file" profile="snap.firmware-updater.firmware-notifier" name="/proc/sys/vm/max_map_count" pid=8665 comm="firmware-notifi" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+[日 7月 12 10:51:46 2026] perf: interrupt took too long (14892 > 12712), lowering kernel.perf_event_max_sample_rate to 13000
+[日 7月 12 11:12:54 2026] vled: unregistered /dev/vled
+[日 7月 12 11:13:13 2026] vled: registered /dev/vled major=239 minor=0
+[日 7月 12 11:18:39 2026] vled: unregistered /dev/vled
+[日 7月 12 11:28:36 2026] vled: registered /dev/vled major=239 minor=0
+[日 7月 12 11:28:57 2026] vled: unregistered /dev/vled
+[日 7月 12 11:29:35 2026] vled: registered /dev/vled major=239 minor=0
+[日 7月 12 11:43:11 2026] audit: type=1400 audit(1783827791.585:161): apparmor="DENIED" operation="open" class="file" profile="snap.firmware-updater.firmware-notifier" name="/proc/sys/vm/max_map_count" pid=10726 comm="firmware-notifi" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+[日 7月 12 11:43:11 2026] audit: type=1400 audit(1783827791.645:162): apparmor="DENIED" operation="capable" class="cap" profile="/usr/sbin/cupsd" pid=11039 comm="cupsd" capability=12  capname="net_admin"
+[日 7月 12 11:43:11 2026] e1000: ens33 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
+[日 7月 12 12:00:19 2026] workqueue: e1000_watchdog [e1000] hogged CPU for >10000us 7 times, consider switching to WQ_UNBOUND
+[日 7月 12 12:00:22 2026] audit: type=1400 audit(1783828822.844:163): apparmor="DENIED" operation="open" class="file" profile="snap.firmware-updater.firmware-notifier" name="/proc/sys/vm/max_map_count" pid=11735 comm="firmware-notifi" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+[日 7月 12 12:06:57 2026] perf: interrupt took too long (19286 > 18615), lowering kernel.perf_event_max_sample_rate to 10000
+[日 7月 12 13:56:54 2026] workqueue: psi_avgs_work hogged CPU for >10000us 4 times, consider switching to WQ_UNBOUND
+[日 7月 12 14:05:08 2026] vled: unregistered /dev/vled
+[日 7月 12 14:15:11 2026] perf: interrupt took too long (24206 > 24107), lowering kernel.perf_event_max_sample_rate to 8000
+[日 7月 12 14:17:00 2026] vled: registered /dev/vled major=239 minor=0
