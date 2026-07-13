@@ -1,0 +1,4 @@
+VLED P3 verify: device=/dev/vled page_size=4096
+PASS T-CLI
+PASS T-CMD
+VLED P3 verify: all checks passed

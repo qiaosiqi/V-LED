@@ -1,0 +1,165 @@
+siqi@siqi:~/siqi_ws/V-LED$ cd ~/siqi_ws/V-LED
+siqi@siqi:~/siqi_ws/V-LED$ sudo rmmod vled 2>/dev/null || true
+siqi@siqi:~/siqi_ws/V-LED$ sudo insmod driver/vled.ko
+siqi@siqi:~/siqi_ws/V-LED$ sudo chmod 666 /dev/vled
+siqi@siqi:~/siqi_ws/V-LED$ command -v strace
+/usr/bin/strace
+siqi@siqi:~/siqi_ws/V-LED$ timeout --signal=INT 15s strace -f -tt \
+  -o /tmp/p5-fd-hang.strace \
+  tools/vled_fd_probe /dev/vled
+VLED P1 probe: device=/dev/vled page_size=4096
+PASS T-BUF-01    
+PASS T-VERSION   
+PASS T-FOPS-05   
+PASS T-BUF-03    
+PASS T-BUF-04    
+PASS T-BUF-02    
+PASS T-BUF-05    
+PASS T-BUF-06    
+PASS T-FOPS-04   
+siqi@siqi:~/siqi_ws/V-LED$ echo "probe exit=$?"
+probe exit=124
+siqi@siqi:~/siqi_ws/V-LED$ tail -n 60 /tmp/p5-fd-hang.strace
+16412 19:44:55.493802 read(3, "{\"type\":\"state\",\"width\":32,\"heig"..., 127) = 126
+16412 19:44:55.494328 read(3, 0x7fff4a1c56be, 127) = -1 EAGAIN (资源暂时不可用)
+16412 19:44:55.494802 close(3)          = 0
+16412 19:44:55.495365 write(1, "PASS T-VERSION   \n", 18) = 18
+16412 19:44:55.495974 openat(AT_FDCWD, "/dev/vled", O_RDWR) = 3
+16412 19:44:55.496995 write(3, "", 0)   = 0
+16412 19:44:55.497680 read(3, "", 0)    = 0
+16412 19:44:55.498483 write(1, "PASS T-FOPS-05   \n", 18) = 18
+16412 19:44:55.499228 close(3)          = 0
+16412 19:44:55.499856 openat(AT_FDCWD, "/dev/vled", O_RDONLY|O_NONBLOCK) = 3
+16412 19:44:55.500715 read(3, "{\"type\":\"state\",\"width\":32,\"heig"..., 127) = 126
+16412 19:44:55.501366 read(3, 0x7fff4a1c36ae, 127) = -1 EAGAIN (资源暂时不可用)
+16412 19:44:55.502086 close(3)          = 0
+16412 19:44:55.502731 openat(AT_FDCWD, "/dev/vled", O_WRONLY) = 3
+16412 19:44:55.503388 write(3, "STATUS                          "..., 4096) = -1 EMSGSIZE (消息过长)
+16412 19:44:55.504066 write(1, "PASS T-BUF-03    \n", 18) = 18
+16412 19:44:55.504941 close(3)          = 0
+16412 19:44:55.505646 openat(AT_FDCWD, "/dev/vled", O_WRONLY) = 3
+16412 19:44:55.506374 write(3, "STATUS                          "..., 4097) = -1 EMSGSIZE (消息过长)
+16412 19:44:55.507170 write(1, "PASS T-BUF-04    \n", 18) = 18
+16412 19:44:55.508089 close(3)          = 0
+16412 19:44:55.508831 openat(AT_FDCWD, "/dev/vled", O_RDONLY|O_NONBLOCK) = 3
+16412 19:44:55.509544 read(3, "{\"type\":\"state\",\"width\":32,\"heig"..., 127) = 126
+16412 19:44:55.510344 read(3, 0x7fff4a1c56ae, 127) = -1 EAGAIN (资源暂时不可用)
+16412 19:44:55.511424 close(3)          = 0
+16412 19:44:55.512270 openat(AT_FDCWD, "/dev/vled", O_WRONLY) = 3
+16412 19:44:55.513109 openat(AT_FDCWD, "/dev/vled", O_WRONLY) = 4
+16412 19:44:55.514193 write(3, "STATUS                          "..., 4095) = 4095
+16412 19:44:55.516650 write(1, "PASS T-BUF-02    \n", 18) = 18
+16412 19:44:55.517558 write(3, "X", 1)  = -1 ENOSPC (设备上没有空间)
+16412 19:44:55.518267 write(1, "PASS T-BUF-05    \n", 18) = 18
+16412 19:44:55.519157 write(4, "STATUS", 6) = 6
+16412 19:44:55.519752 write(1, "PASS T-BUF-06    \n", 18) = 18
+16412 19:44:55.520227 close(3)          = 0
+16412 19:44:55.520625 close(4)          = 0
+16412 19:44:55.521326 openat(AT_FDCWD, "/dev/vled", O_RDONLY) = 3
+16412 19:44:55.522562 lseek(3, 0, SEEK_SET) = -1 ESPIPE (非法 seek 操作)
+16412 19:44:55.523728 write(1, "PASS T-FOPS-04   \n", 18) = 18
+16412 19:44:55.524507 close(3)          = 0
+16412 19:44:55.525038 openat(AT_FDCWD, "/dev/vled", O_RDONLY|O_NONBLOCK) = 3
+16412 19:44:55.525757 read(3, "{\"type\":\"state\",\"width\":32,\"heig"..., 127) = 126
+16412 19:44:55.526530 read(3, 0x7fff4a1c16ae, 127) = -1 EAGAIN (资源暂时不可用)
+16412 19:44:55.527104 close(3)          = 0
+16412 19:44:55.527915 openat(AT_FDCWD, "/dev/vled", O_RDWR|O_NONBLOCK) = 3
+16412 19:44:55.528724 write(3, "COLOR 256 0 0", 13) = -1 EINVAL (无效的参数)
+16412 19:44:55.529520 write(3, "STATUS                          "..., 4095) = 4095
+16412 19:44:55.530163 close(3)          = 0
+16412 19:44:55.530867 openat(AT_FDCWD, "/dev/vled", O_RDONLY|O_NONBLOCK) = 3
+16412 19:44:55.531545 read(3, "{\"type\":\"state\",\"width\":32,\"heig"..., 127) = 126
+16412 19:44:55.532281 read(3, 0x7fff4a1c36ae, 127) = -1 EAGAIN (资源暂时不可用)
+16412 19:44:55.533039 close(3)          = 0
+16412 19:44:55.533644 openat(AT_FDCWD, "/dev/vled", O_RDWR) = 3
+16412 19:44:55.534312 read(3, "{\"type\":\"state\",\"width\":32,\"hei", 31) = 31
+16412 19:44:55.535107 read(3, "ght\":16,\"text\":\"p1-version\",\"co", 31) = 31
+16412 19:44:55.535919 read(3, "lor\":[255,255,255],\"brightness\"", 31) = 31
+16412 19:44:55.536665 read(3, ":100,\"mode\":\"static\",\"version\":", 31) = 31
+16412 19:44:55.537478 read(3, "1}", 31) = 2
+16412 19:44:55.538380 read(3, 0x7fff4a1c56ae, 31) = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
+16412 19:45:10.437174 --- SIGINT {si_signo=SIGINT, si_code=SI_USER, si_pid=16408, si_uid=1000} ---
+16412 19:45:10.438150 +++ killed by SIGINT +++
+siqi@siqi:~/siqi_ws/V-LED$ sudo rmmod vled
+siqi@siqi:~/siqi_ws/V-LED$ sudo journalctl -k -n 80 --no-pager
+7月 07 13:58:49 siqi systemd-journald[379]: /var/log/journal/37cfe852d63146a497a62b15a80aa8a3/user-1000.journal: Journal file uses a different sequence number ID, rotating.
+7月 07 13:58:49 siqi kernel: rfkill: input handler enabled
+7月 07 13:58:51 siqi kernel: rfkill: input handler disabled
+7月 07 13:58:52 siqi kernel: /dev/sr0: Can't open blockdev
+7月 07 13:58:53 siqi kernel: input: VMware DnD UInput pointer as /devices/virtual/input/input6
+7月 07 15:00:22 siqi kernel: kauditd_printk_skb: 146 callbacks suppressed
+7月 07 15:00:22 siqi kernel: audit: type=1400 audit(1783407622.995:158): apparmor="DENIED" operation="open" class="file" profile="snap.firmware-updater.firmware-notifier" name="/proc/sys/vm/max_map_count" pid=3859 comm="firmware-notifi" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+7月 07 15:40:50 siqi kernel: perf: interrupt took too long (2872 > 2500), lowering kernel.perf_event_max_sample_rate to 69000
+7月 07 16:10:53 siqi kernel: perf: interrupt took too long (3908 > 3590), lowering kernel.perf_event_max_sample_rate to 51000
+7月 09 09:37:24 siqi kernel: e1000: ens33 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
+7月 09 09:37:24 siqi kernel: audit: type=1400 audit(1783561044.718:159): apparmor="DENIED" operation="open" class="file" profile="snap.firmware-updater.firmware-notifier" name="/proc/sys/vm/max_map_count" pid=6201 comm="firmware-notifi" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+7月 09 09:37:25 siqi kernel: perf: interrupt took too long (5359 > 4885), lowering kernel.perf_event_max_sample_rate to 37000
+7月 09 09:41:22 siqi kernel: workqueue: e1000_watchdog [e1000] hogged CPU for >10000us 4 times, consider switching to WQ_UNBOUND
+7月 09 09:42:49 siqi kernel: perf: interrupt took too long (10170 > 6698), lowering kernel.perf_event_max_sample_rate to 19000
+7月 09 09:43:46 siqi kernel: vled: loading out-of-tree module taints kernel.
+7月 09 09:43:46 siqi kernel: vled: module verification failed: signature and/or required key missing - tainting kernel
+7月 09 09:43:46 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 09 09:49:27 siqi kernel: e1000: ens33 NIC Link is Down
+7月 09 09:49:33 siqi kernel: e1000: ens33 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
+7月 09 09:49:35 siqi kernel: e1000: ens33 NIC Link is Down
+7月 09 09:49:42 siqi kernel: e1000: ens33 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
+7月 09 09:50:13 siqi kernel: workqueue: e1000_watchdog [e1000] hogged CPU for >10000us 5 times, consider switching to WQ_UNBOUND
+7月 09 10:07:37 siqi kernel: e1000: ens33 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
+7月 09 14:04:10 siqi kernel: e1000: ens33 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
+7月 09 14:04:11 siqi kernel: audit: type=1400 audit(1783577051.202:160): apparmor="DENIED" operation="open" class="file" profile="snap.firmware-updater.firmware-notifier" name="/proc/sys/vm/max_map_count" pid=8665 comm="firmware-notifi" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+7月 09 14:04:16 siqi kernel: perf: interrupt took too long (14892 > 12712), lowering kernel.perf_event_max_sample_rate to 13000
+7月 09 14:25:24 siqi kernel: vled: unregistered /dev/vled
+7月 09 14:25:44 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 09 14:31:09 siqi kernel: vled: unregistered /dev/vled
+7月 09 14:41:06 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 09 14:41:27 siqi kernel: vled: unregistered /dev/vled
+7月 09 14:42:05 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 12 11:43:11 siqi kernel: audit: type=1400 audit(1783827791.585:161): apparmor="DENIED" operation="open" class="file" profile="snap.firmware-updater.firmware-notifier" name="/proc/sys/vm/max_map_count" pid=10726 comm="firmware-notifi" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+7月 12 11:43:11 siqi kernel: audit: type=1400 audit(1783827791.645:162): apparmor="DENIED" operation="capable" class="cap" profile="/usr/sbin/cupsd" pid=11039 comm="cupsd" capability=12  capname="net_admin"
+7月 12 11:43:11 siqi kernel: e1000: ens33 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
+7月 12 12:00:19 siqi kernel: workqueue: e1000_watchdog [e1000] hogged CPU for >10000us 7 times, consider switching to WQ_UNBOUND
+7月 12 12:00:22 siqi kernel: audit: type=1400 audit(1783828822.844:163): apparmor="DENIED" operation="open" class="file" profile="snap.firmware-updater.firmware-notifier" name="/proc/sys/vm/max_map_count" pid=11735 comm="firmware-notifi" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+7月 12 12:06:57 siqi kernel: perf: interrupt took too long (19286 > 18615), lowering kernel.perf_event_max_sample_rate to 10000
+7月 12 13:56:54 siqi kernel: workqueue: psi_avgs_work hogged CPU for >10000us 4 times, consider switching to WQ_UNBOUND
+7月 12 14:05:08 siqi kernel: vled: unregistered /dev/vled
+7月 12 14:15:11 siqi kernel: perf: interrupt took too long (24206 > 24107), lowering kernel.perf_event_max_sample_rate to 8000
+7月 12 14:17:00 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 12 14:20:34 siqi kernel: vled: unregistered /dev/vled
+7月 12 14:27:53 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 12 14:29:05 siqi kernel: vled: unregistered /dev/vled
+7月 12 15:00:22 siqi kernel: audit: type=1400 audit(1783839622.942:164): apparmor="DENIED" operation="open" class="file" profile="snap.firmware-updater.firmware-notifier" name="/proc/sys/vm/max_map_count" pid=13481 comm="firmware-notifi" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+7月 12 15:29:55 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 12 15:29:55 siqi kernel: vled: unregistered /dev/vled
+7月 12 15:44:29 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 12 15:44:31 siqi kernel: vled: unregistered /dev/vled
+7月 12 15:44:31 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 12 15:44:31 siqi kernel: vled: unregistered /dev/vled
+7月 12 15:44:31 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 12 15:44:31 siqi kernel: vled: unregistered /dev/vled
+7月 12 15:44:31 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 12 15:44:31 siqi kernel: vled: unregistered /dev/vled
+7月 12 15:47:39 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 12 15:48:13 siqi kernel: vled: unregistered /dev/vled
+7月 12 16:39:23 siqi kernel: perf: interrupt took too long (30488 > 30257), lowering kernel.perf_event_max_sample_rate to 6000
+7月 12 17:04:20 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 12 17:04:20 siqi kernel: vled: unregistered /dev/vled
+7月 12 17:04:20 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 12 17:04:21 siqi kernel: vled: unregistered /dev/vled
+7月 12 17:04:21 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 12 17:04:21 siqi kernel: vled: unregistered /dev/vled
+7月 12 17:04:21 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 12 17:06:15 siqi kernel: vled: unregistered /dev/vled
+7月 12 17:06:19 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 12 17:06:44 siqi kernel: vled: unregistered /dev/vled
+7月 12 17:06:47 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 12 17:14:58 siqi kernel: vled: unregistered /dev/vled
+7月 12 17:16:48 siqi kernel: workqueue: psi_avgs_work hogged CPU for >10000us 5 times, consider switching to WQ_UNBOUND
+7月 12 19:33:29 siqi kernel: workqueue: pcpu_balance_workfn hogged CPU for >10000us 4 times, consider switching to WQ_UNBOUND
+7月 12 19:33:30 siqi kernel: e1000: ens33 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
+7月 12 19:33:31 siqi kernel: audit: type=1400 audit(1783856011.062:165): apparmor="DENIED" operation="open" class="file" profile="snap.firmware-updater.firmware-notifier" name="/proc/sys/vm/max_map_count" pid=15728 comm="firmware-notifi" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+7月 12 19:33:32 siqi kernel: workqueue: psi_avgs_work hogged CPU for >10000us 7 times, consider switching to WQ_UNBOUND
+7月 12 19:35:19 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 12 19:44:38 siqi kernel: vled: unregistered /dev/vled
+7月 12 19:44:42 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 12 19:45:21 siqi kernel: vled: unregistered /dev/vled
+siqi@siqi:~/siqi_ws/V-LED$ 

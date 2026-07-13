@@ -1,0 +1,12 @@
+7月 12 17:04:20 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 12 17:04:20 siqi kernel: vled: unregistered /dev/vled
+7月 12 17:04:20 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 12 17:04:21 siqi kernel: vled: unregistered /dev/vled
+7月 12 17:04:21 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 12 17:04:21 siqi kernel: vled: unregistered /dev/vled
+7月 12 17:04:21 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 12 17:06:15 siqi kernel: vled: unregistered /dev/vled
+7月 12 17:06:19 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 12 17:06:44 siqi kernel: vled: unregistered /dev/vled
+7月 12 17:06:47 siqi kernel: vled: registered /dev/vled major=239 minor=0
+7月 12 17:14:58 siqi kernel: vled: unregistered /dev/vled

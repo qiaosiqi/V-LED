@@ -1,0 +1,17 @@
+VLED P1 probe: device=/dev/vled page_size=4096
+PASS T-BUF-01    
+PASS T-VERSION   
+PASS T-FOPS-05   
+PASS T-BUF-03    
+PASS T-BUF-04    
+PASS T-BUF-02    
+PASS T-BUF-05    
+PASS T-BUF-06    
+PASS T-FOPS-04   
+PASS T-ROLLBACK  
+PASS T-FD-01     
+PASS T-READ-03   
+PASS T-FD-03     
+PASS T-FD-04     
+PASS T-JSON-02..03
+VLED P1 probe: all checks passed

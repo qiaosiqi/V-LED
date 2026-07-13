@@ -1,0 +1,18 @@
+test_bounded_log_never_exceeds_limit ... ok
+test_importing_gui_module_does_not_create_a_window ... ok
+test_local_clear_is_preview_only_and_new_udp_restores_text ... ok
+test_manual_overrides_survive_udp_and_restore_latest_values ... ok
+test_accepts_complete_static_and_scroll_states ... ok
+test_rejects_bad_encoding_json_root_and_type ... ok
+test_rejects_missing_fields_without_partial_state ... ok
+test_rejects_oversize_datagram_before_decoding ... ok
+test_rejects_wrong_types_ranges_and_modes ... ok
+test_events_are_immutable_and_queue_is_bounded ... ok
+test_receiver_emits_state_error_and_stops_cleanly ... ok
+test_receiver_module_has_no_tk_dependency ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.033s
+
+OK
+unittest exit code: 0

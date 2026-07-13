@@ -1,0 +1,28 @@
+2026-07-12T17:00:44+08:00
+PRETTY_NAME="Ubuntu 24.04.4 LTS"
+NAME="Ubuntu"
+VERSION_ID="24.04"
+VERSION="24.04.4 LTS (Noble Numbat)"
+VERSION_CODENAME=noble
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=noble
+LOGO=ubuntu-logo
+Linux siqi 6.17.0-35-generic #35~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue May 26 19:30:42 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
+gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+x86_64-linux-gnu-gcc-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+GNU Make 4.3
+GNU ld (GNU Binutils for Ubuntu) 2.42
+Python 3.12.3
+## integration-promote-try...origin/integration-promote-try
+?? get_env.sh
+?? get_env_2.sh
+abad494dfad2044ad0c34e0c907ad9be4c549bc9
+lrwxrwxrwx 1 root root 40  5月 27 01:56 /lib/modules/6.17.0-35-generic/build -> /usr/src/linux-headers-6.17.0-35-generic
+lo               UNKNOWN        127.0.0.1/8 
+ens33            UP             192.168.57.139/24 
+default via 192.168.57.2 dev ens33 proto dhcp src 192.168.57.139 metric 100 

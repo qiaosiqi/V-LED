@@ -1,0 +1,5 @@
+make: 进入目录“/home/siqi/siqi_ws/V-LED/tools”
+cc -Wall -Wextra -Werror -O2 -o vled_cli vled_cli.c
+cc -Wall -Wextra -Werror -O2 -o vled_bridge vled_bridge.c
+cc -Wall -Wextra -Werror -O2 -o vled_fd_probe vled_fd_probe.c
+make: 离开目录“/home/siqi/siqi_ws/V-LED/tools”
