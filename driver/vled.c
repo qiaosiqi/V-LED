@@ -620,7 +620,7 @@ unlock_context:
 		vled_trace("WRITE id=%llu pid=%d command=\"%s\" requested=%zu "
 			   "result=%zd offset=%zu rollback=1\n",
 			   (unsigned long long)ctx->trace_id, current->pid,
-			   trace_command, count, old_offset, ret);
+			   trace_command, count, ret, old_offset);
 	}
 	return ret;
 }

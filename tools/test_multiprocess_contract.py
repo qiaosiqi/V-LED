@@ -23,6 +23,7 @@ def reject(text: str, pattern: str, message: str) -> None:
 
 def main() -> int:
     driver = (ROOT / "driver" / "vled.c").read_text(encoding="utf-8")
+    cli = (ROOT / "tools" / "vled_cli.c").read_text(encoding="utf-8")
     probe = (ROOT / "tools" / "vled_multiprocess_probe.py").read_text(
         encoding="utf-8"
     )
@@ -38,6 +39,21 @@ def main() -> int:
             "successful no-op writes do not wake a shared-FD reader")
     reject(driver, r"should_wake_waiters\s*=\s*changed\s*;",
            "shared-FD wakeup is still incorrectly gated by version changes")
+    require(
+        driver,
+        r"trace_command,\s*count,\s*ret,\s*old_offset\);",
+        "failed-write trace does not print result and offset in the right order",
+    )
+    require(
+        cli,
+        r"write_errno\s*==\s*EMSGSIZE\s*\|\|\s*write_errno\s*==\s*ENOSPC",
+        "CLI does not distinguish both write-buffer overflow errors",
+    )
+    require(
+        cli,
+        re.escape("out of buffer, please try again"),
+        "CLI does not provide the required buffer overflow message",
+    )
     for test_id in ("T-MP-01", "T-MP-02", "T-MP-03", "T-MP-04"):
         require(probe, re.escape(test_id), f"missing {test_id}")
     require(probe, r"get_context\(\"fork\"\)",

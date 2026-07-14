@@ -175,6 +175,15 @@ sleep 1
 run "$cli" write "TEXT 中文演示" "$device"
 run "$cli" read "$device"
 sleep 1
+explain "构造恰好 PAGE_SIZE 字节的写入，展示明确的缓冲区越界提示且状态不变。"
+oversized_payload=$(python3 -c 'import os, sys; sys.stdout.write("X" * os.sysconf("SC_PAGE_SIZE"))')
+printf '  [命令] vled_cli write <PAGE_SIZE=%d bytes> %q\n' "${#oversized_payload}" "$device"
+if "$cli" write "$oversized_payload" "$device"; then
+    echo "FAIL: PAGE_SIZE write unexpectedly succeeded" >&2
+    exit 1
+else
+    echo "  [PASS] PAGE_SIZE 写入被拒绝，并显示 out of buffer, please try again。"
+fi
 if [[ -n $windows_ip ]]; then
     explain "Windows 模拟器此时应显示中文、红色、80% 亮度和 scroll 模式。"
 fi

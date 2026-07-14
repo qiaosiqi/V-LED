@@ -117,7 +117,15 @@ static int write_device(const char *dev, const char *text)
 
     n = write(fd, text, len);
     if (n < 0) {
-        perror("write");
+        int write_errno = errno;
+
+        if (write_errno == EMSGSIZE || write_errno == ENOSPC) {
+            fprintf(stderr, "out of buffer, please try again\n");
+        } else {
+            fprintf(stderr, "write: %s\n", strerror(write_errno));
+        }
+        verbose_log("write(fd=%d, count=%zu) -> -1 errno=%d (%s)", fd,
+                    len, write_errno, strerror(write_errno));
         close_device(fd);
         return 1;
     }

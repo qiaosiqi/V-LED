@@ -110,6 +110,15 @@ VLED_VERBOSE=1 ./vled_cli write "TEXT Hello VLED" /dev/vled
 VLED_VERBOSE=1 ./vled_cli read /dev/vled
 ```
 
+当单次写入达到/超过 `PAGE_SIZE`（`EMSGSIZE`），或当前 FD 的累计写入页空间不足
+（`ENOSPC`）时，CLI 会给出统一且可理解的提示：
+
+```text
+out of buffer, please try again
+```
+
+驱动错误码、失败回滚和状态语义保持不变；详细模式还会附带原始 errno 便于调试。
+
 ## P1 文件上下文与边界探针
 
 在刚加载的新模块上执行：
