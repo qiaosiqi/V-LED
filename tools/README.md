@@ -36,6 +36,8 @@ B 部分位于 Linux 虚拟机用户态，包含程序和自动化入口：
 5. `vled_multiprocess_probe.py`：真实 fork 多进程验收，检查分别 open、独立写偏移、共享状态、4+4 进程压力和共享 FD 唤醒。
 6. `vled_verify.sh`：P1–P5 与多进程统一验收入口，负责严格构建、bridge 黑盒测试、模块生命周期、业务/错误码/并发/poll/多进程回归和内核日志检查。
 7. `vled_demo.sh`：Linux→Windows 可复现演示编排；任一步失败都会停止。
+8. `vled_teacher_demo.sh`：教师验收专用入口，详细打印构建、设备注册、用户态
+   系统调用、PAGE_SIZE、多进程独立偏移、内核日志和两轮装卸；可选同步到 Windows。
 
 驱动本身不直接联网，网络转发放在用户态 `vled_bridge` 程序中完成。
 
@@ -99,6 +101,14 @@ sudo chmod 666 /dev/vled
 ```
 
 这些命令可以证明用户态程序能够打开字符设备、向驱动写入文本命令、从设备读取 JSON 状态，并正常关闭设备。
+
+设置 `VLED_VERBOSE=1` 后，CLI 会把 `open/write/read/close` 的 PID、FD、请求长度和
+返回值写到标准错误；状态 JSON 仍单独写到标准输出，因此不会破坏现有脚本：
+
+```bash
+VLED_VERBOSE=1 ./vled_cli write "TEXT Hello VLED" /dev/vled
+VLED_VERBOSE=1 ./vled_cli read /dev/vled
+```
 
 ## P1 文件上下文与边界探针
 
@@ -188,6 +198,28 @@ Windows 启动 `simulator/vled_sim.py` 后，在 Linux 执行：
 
 脚本依次演示 TEXT、COLOR、BRIGHTNESS、MODE、中文和 CLEAR，并在退出时终止
 bridge。它不会加载模块或修改设备权限；这些前置动作由操作者显式完成。
+
+## 教师验收详细演示
+
+教师脚本会自行构建、加载 `trace_ops=1`、检查自动设备号和 `/dev/vled`，详细展示
+用户态/内核态读写、PAGE_SIZE 边界、真实 fork 多进程独立偏移以及两轮动态装卸。
+运行前应保证旧模块未加载，脚本内部按需使用 sudo，不要给整个脚本加 sudo。
+
+纯 Linux 演示：
+
+```bash
+./tools/vled_teacher_demo.sh
+```
+
+同时把业务状态发送到已启动的 Windows 模拟器：
+
+```bash
+./tools/vled_teacher_demo.sh 192.168.57.1 /dev/vled
+```
+
+传入 Windows IP 后，脚本会启动 `vled_bridge`，通过 UDP 9000 发送同一批
+TEXT/COLOR/BRIGHTNESS/MODE/中文状态；不传 IP 时不需要 Windows。详细追踪只在
+本演示的低负载阶段启用，常规 `vled_verify.sh` 仍使用驱动默认的关闭状态。
 
 ## 报告可写说明
 

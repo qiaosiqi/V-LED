@@ -28,10 +28,16 @@ REQUIRED_FIELDS = {
     "type", "width", "height", "text", "color", "brightness", "mode",
     "version",
 }
+VERBOSE = os.environ.get("VLED_VERBOSE", "") not in {"", "0"}
 
 
 class Failure(RuntimeError):
     pass
+
+
+def detail(message: str) -> None:
+    if VERBOSE:
+        print(f"  [DETAIL] {message}")
 
 
 def check(condition: bool, message: str) -> None:
@@ -155,12 +161,20 @@ def test_separate_open_visibility(ctx: Any, device: str) -> None:
                          args=(device, ready, updated_text, results))
     reader.start()
     writer.start()
+    detail(
+        f"T-MP-01 reader PID={reader.pid} and writer PID={writer.pid} "
+        "each call open() on the same device"
+    )
     join_or_terminate([reader, writer], 7.0, "T-MP-01")
     items = collect(results, 2, "T-MP-01")
     check(items["reader"][2]["text"] == initial_text,
           "reader initial state mismatch")
     check(items["reader"][3]["text"] == updated_text,
           "independent reader did not observe writer state")
+    detail(
+        f"T-MP-01 reader observed text {initial_text!r}, blocked, then "
+        f"observed writer state {updated_text!r}"
+    )
     print("PASS T-MP-01 separate processes open and share state without deadlock")
 
 
@@ -214,8 +228,16 @@ def test_independent_write_offsets(ctx: Any, device: str) -> None:
                        args=(device, page_full, peer_done, text, results))
     owner.start()
     peer.start()
+    detail(
+        f"T-MP-02 owner PID={owner.pid} fills its PAGE_SIZE write context; "
+        f"peer PID={peer.pid} opens an independent context"
+    )
     join_or_terminate([owner, peer], 7.0, "T-MP-02")
     collect(results, 2, "T-MP-02")
+    detail(
+        f"T-MP-02 owner accepted {PAGE_SIZE - 1} bytes then returned ENOSPC; "
+        "peer still wrote successfully from its own offset 0"
+    )
     print("PASS T-MP-02 independent processes have independent write offsets")
 
 
@@ -265,6 +287,11 @@ def test_process_stress(ctx: Any, device: str, iterations: int) -> None:
     ]
     for process in processes:
         process.start()
+    detail(
+        "T-MP-03 started writer PIDs="
+        f"{[process.pid for process in processes[:4]]} and reader PIDs="
+        f"{[process.pid for process in processes[4:]]}"
+    )
     join_or_terminate(processes, 30.0, "T-MP-03")
     collect(results, worker_count, "T-MP-03")
     read_current(device)
@@ -288,6 +315,10 @@ def test_fork_shared_fd_wakeup(ctx: Any, device: str) -> None:
         results = ctx.Queue()
         reader = ctx.Process(target=inherited_reader, args=(fd, ready, results))
         reader.start()
+        detail(
+            f"T-MP-04 parent PID={os.getpid()} opened fd={fd}; child "
+            f"PID={reader.pid} inherited that same open-file context"
+        )
         check(ready.wait(2.0), "shared reader did not start")
         time.sleep(0.2)
         check(reader.is_alive(), "shared reader did not block after current version")
@@ -296,6 +327,10 @@ def test_fork_shared_fd_wakeup(ctx: Any, device: str) -> None:
         items = collect(results, 1, "T-MP-04")
         check(items["shared-reader"][2] == before,
               "STATUS changed state while refreshing shared FD")
+        detail(
+            "T-MP-04 child blocked after consuming the version and STATUS "
+            "woke it without changing JSON/version"
+        )
     finally:
         if reader is not None and reader.is_alive():
             reader.terminate()

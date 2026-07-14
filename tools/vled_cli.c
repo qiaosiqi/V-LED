@@ -15,6 +15,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,6 +23,34 @@
 
 #define DEFAULT_DEV "/dev/vled"
 #define BUF_SIZE 4096
+
+static int verbose_enabled(void)
+{
+    const char *value = getenv("VLED_VERBOSE");
+
+    return value && value[0] != '\0' && strcmp(value, "0") != 0;
+}
+
+static void verbose_log(const char *format, ...)
+{
+    va_list args;
+
+    if (!verbose_enabled()) {
+        return;
+    }
+    fprintf(stderr, "[USER pid=%ld] ", (long)getpid());
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+    fputc('\n', stderr);
+}
+
+static void close_device(int fd)
+{
+    int result = close(fd);
+
+    verbose_log("close(fd=%d) -> %d", fd, result);
+}
 
 static void usage(const char *prog)
 {
@@ -49,12 +78,17 @@ static int read_device(const char *dev)
         return 1;
     }
 
+    verbose_log("open(\"%s\", O_RDONLY) -> fd=%d", dev, fd);
+    verbose_log("read(fd=%d, count=%d): request device state", fd, BUF_SIZE);
+
     n = read(fd, buf, BUF_SIZE);
     if (n < 0) {
         perror("read");
-        close(fd);
+        close_device(fd);
         return 1;
     }
+
+    verbose_log("read(fd=%d, count=%d) -> %zd bytes", fd, BUF_SIZE, n);
 
     buf[n] = '\0';
     printf("%s", buf);
@@ -62,7 +96,7 @@ static int read_device(const char *dev)
         putchar('\n');
     }
 
-    close(fd);
+    close_device(fd);
     return 0;
 }
 
@@ -77,21 +111,27 @@ static int write_device(const char *dev, const char *text)
         return 1;
     }
 
+    verbose_log("open(\"%s\", O_WRONLY) -> fd=%d", dev, fd);
+    verbose_log("write(fd=%d, count=%zu, command=\"%.120s\")", fd, len,
+                text);
+
     n = write(fd, text, len);
     if (n < 0) {
         perror("write");
-        close(fd);
+        close_device(fd);
         return 1;
     }
 
+    verbose_log("write(fd=%d, count=%zu) -> %zd bytes", fd, len, n);
+
     if ((size_t)n != len) {
         fprintf(stderr, "short write: expected %zu bytes, wrote %zd\n", len, n);
-        close(fd);
+        close_device(fd);
         return 1;
     }
 
     printf("wrote %zd bytes to %s\n", n, dev);
-    close(fd);
+    close_device(fd);
     return 0;
 }
 

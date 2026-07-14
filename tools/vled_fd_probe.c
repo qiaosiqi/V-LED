@@ -5,6 +5,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,6 +22,26 @@
 #define STATE_CAPACITY 8192
 
 static int failures;
+
+static int verbose_enabled(void)
+{
+    const char *value = getenv("VLED_VERBOSE");
+
+    return value && value[0] != '\0' && strcmp(value, "0") != 0;
+}
+
+static void detail(const char *format, ...)
+{
+    va_list args;
+
+    if (!verbose_enabled())
+        return;
+    fputs("  [DETAIL] ", stdout);
+    va_start(args, format);
+    vprintf(format, args);
+    va_end(args);
+    putchar('\n');
+}
 
 static long system_page_size(void)
 {
@@ -55,6 +76,9 @@ static int open_checked(const char *id, const char *dev, int flags)
         snprintf(message, sizeof(message), "open(%s): %s", dev,
                  strerror(errno));
         fail(id, message);
+    } else {
+        detail("%s open(%s, flags=0x%x) -> fd=%d; new open starts with "
+               "independent offsets", id, dev, flags, fd);
     }
     return fd;
 }
@@ -76,6 +100,7 @@ static int write_exact(const char *id, int fd, const void *data, size_t size)
         fail(id, message);
         return -1;
     }
+    detail("%s write(fd=%d, count=%zu) -> %zd", id, fd, size, written);
     return 0;
 }
 
@@ -95,6 +120,8 @@ static int expect_write_error(const char *id, int fd, const void *data,
         fail(id, message);
         return -1;
     }
+    detail("%s write(fd=%d, count=%zu) -> -1/%s as expected", id, fd,
+           size, strerror(expected_errno));
     return 0;
 }
 
@@ -260,6 +287,8 @@ static void test_boundaries_and_independent_writes(const char *dev,
     }
     memset(page, ' ', page_size + 1);
     memcpy(page, "STATUS", strlen("STATUS"));
+    detail("PAGE_SIZE=%zu: legal per-open capacity is PAGE_SIZE-1=%zu bytes",
+           page_size, page_size - 1);
 
     fd_a = open_checked("T-FOPS-05", dev, O_RDWR);
     if (fd_a < 0) {
@@ -305,12 +334,15 @@ static void test_boundaries_and_independent_writes(const char *dev,
     fd_a = open_checked("T-BUF-02", dev, O_WRONLY);
     fd_b = open_checked("T-BUF-06", dev, O_WRONLY);
     if (fd_a >= 0 && fd_b >= 0) {
+        detail("T-BUF-02/T-BUF-06 fd_a=%d and fd_b=%d are separate opens",
+               fd_a, fd_b);
         if (write_exact("T-BUF-02", fd_a, page, page_size - 1) == 0)
             pass("T-BUF-02");
         if (expect_write_error("T-BUF-05", fd_a, "X", 1, ENOSPC) == 0)
             pass("T-BUF-05");
         if (write_exact("T-BUF-06", fd_b, "STATUS", strlen("STATUS")) == 0)
             pass("T-BUF-06");
+        detail("fd_a remained full while fd_b wrote from its own offset 0");
     }
     if (fd_a >= 0)
         close(fd_a);
@@ -424,6 +456,8 @@ static void test_multifd_snapshot(const char *dev)
     }
     first_a = read(fd_a, prefix_a, sizeof(prefix_a));
     first_b = read(fd_b, prefix_b, sizeof(prefix_b));
+    detail("T-FD-01 fd_a=%d read %zd bytes and fd_b=%d read %zd bytes; "
+           "both reads began at offset 0", fd_a, first_a, fd_b, first_b);
     if (first_a != (ssize_t)sizeof(prefix_a) || first_b != first_a ||
         memcmp(prefix_a, prefix_b, (size_t)first_a) != 0) {
         fail("T-FD-01", "independent opens did not start at read offset 0");
@@ -484,6 +518,8 @@ static void test_dup_offset(const char *dev)
         return;
     }
     first = read(fd, combined, 11);
+    detail("T-FD-04 original fd=%d read first %zd bytes; dup fd=%d must "
+           "continue the shared open-file offset", fd, first, duplicate);
     if (first != 11) {
         fail("T-FD-04", "first dup read was short");
         close(duplicate);

@@ -195,6 +195,19 @@ sudo insmod vled.ko
 ls -l /dev/vled
 ```
 
+正常加载只保留注册和注销摘要。教师演示时可启用可选操作追踪：
+
+```bash
+sudo insmod vled.ko trace_ops=1
+cat /sys/module/vled/parameters/trace_ops
+sudo journalctl -k -f | grep 'vled:'
+```
+
+追踪会打印动态 major/minor、cdev/class/device 创建步骤，以及每个 open 的诊断 ID、
+PID、读写偏移、快照版本、命令结果和设备页长度。诊断 ID 不是内核地址；命令内容会
+限长并把控制/非 ASCII 字节归一化。`trace_ops` 默认关闭，压力测试应保持关闭，以免
+大量日志干扰时序。该参数只影响日志，不参与命令解析、状态发布、锁、偏移或唤醒判断。
+
 卸载：
 
 ```bash

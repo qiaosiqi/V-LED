@@ -58,6 +58,22 @@ Linux 加载模块并允许普通用户访问 `/dev/vled` 后运行：
 `9000`。`vled_demo.sh` 启动 `vled_bridge`，依次演示文字、颜色、亮度、模式、
 中文和清屏，并在退出时停止 bridge；它不会加载模块或修改权限。
 
+## 教师验收演示
+
+下面的入口会从构建开始，详细打印用户态系统调用、内核处理、PAGE_SIZE 边界、
+真实多进程独立偏移、自动设备号/设备节点以及两轮模块装卸：
+
+```bash
+# 纯 Linux 演示
+./tools/vled_teacher_demo.sh
+
+# 同时通过 UDP 9000 更新 Windows 模拟器
+./tools/vled_teacher_demo.sh 192.168.57.1 /dev/vled
+```
+
+第二种形式要求 Windows 已运行 `python simulator/vled_sim.py`。教师脚本内部按需
+调用 sudo，不要使用 `sudo ./tools/vled_teacher_demo.sh` 启动整个脚本。
+
 ## 规范工具名称
 
 | 工具 | 用途 |
@@ -69,6 +85,7 @@ Linux 加载模块并允许普通用户访问 `/dev/vled` 后运行：
 | `vled_poll_probe` | poll、阻塞/非阻塞 read 与 wait queue 探针 |
 | `vled_multiprocess_probe.py` | 真实 fork 多进程、独立写偏移、共享状态、并发无死锁与共享 FD 唤醒探针 |
 | `vled_demo.sh` | Linux→Windows 演示编排 |
+| `vled_teacher_demo.sh` | 五项驱动要求的详细教师验收，可选 Windows UDP 联动 |
 
 ## 已冻结的设备语义
 

@@ -1,3 +1,4 @@
+#include <linux/atomic.h>
 #include <linux/cdev.h>
 #include <linux/device.h>
 #include <linux/err.h>
@@ -9,6 +10,7 @@
 #include <linux/module.h>
 #include <linux/mutex.h>
 #include <linux/poll.h>
+#include <linux/sched.h>
 #include <linux/slab.h>
 #include <linux/string.h>
 #include <linux/uaccess.h>
@@ -48,6 +50,7 @@ struct vled_device {
 
 struct vled_file_context {
 	struct mutex lock;
+	u64 trace_id;
 	loff_t read_offset;
 	size_t write_offset;
 	char *read_snapshot;
@@ -71,6 +74,33 @@ struct vled_file_context {
  * write offsets; vled_device.lock only serializes publication of shared state.
  */
 static struct vled_device vled;
+static bool trace_ops;
+static atomic64_t vled_next_trace_id = ATOMIC64_INIT(0);
+
+module_param(trace_ops, bool, 0644);
+MODULE_PARM_DESC(trace_ops,
+		 "log VLED open/read/write/release and registration details");
+
+#define vled_trace(fmt, ...)                                                   \
+	do {                                                                     \
+		if (READ_ONCE(trace_ops))                                         \
+			pr_info("vled: TRACE " fmt, ##__VA_ARGS__);                \
+	} while (0)
+
+static void vled_format_trace_text(const char *src, char *dst, size_t dst_size)
+{
+	size_t index;
+
+	if (dst_size == 0)
+		return;
+
+	for (index = 0; index + 1 < dst_size && src[index] != '\0'; index++) {
+		unsigned char ch = src[index];
+
+		dst[index] = ch >= 0x20 && ch <= 0x7e ? ch : '.';
+	}
+	dst[index] = '\0';
+}
 
 static void vled_lock_device(struct vled_file_context *ctx)
 {
@@ -317,8 +347,13 @@ static int vled_open(struct inode *inode, struct file *file)
 	}
 
 	mutex_init(&ctx->lock);
+	ctx->trace_id = atomic64_inc_return(&vled_next_trace_id);
 	ctx->read_refresh_pending = true;
 	file->private_data = ctx;
+	vled_trace("OPEN id=%llu pid=%d tgid=%d flags=0x%x read_offset=0 "
+		   "write_offset=0 per_open_page=%lu\n",
+		   (unsigned long long)ctx->trace_id, current->pid, current->tgid,
+		   file->f_flags, (unsigned long)PAGE_SIZE);
 	return 0;
 }
 
@@ -328,6 +363,11 @@ static int vled_release(struct inode *inode, struct file *file)
 
 	(void)inode;
 	if (ctx) {
+		vled_trace("RELEASE id=%llu pid=%d tgid=%d final_read_offset=%lld "
+			   "final_write_offset=%zu\n",
+			   (unsigned long long)ctx->trace_id, current->pid,
+			   current->tgid, (long long)ctx->read_offset,
+			   ctx->write_offset);
 		kfree(ctx->write_buffer);
 		kfree(ctx->read_snapshot);
 		kfree(ctx);
@@ -340,13 +380,21 @@ static ssize_t vled_read(struct file *file, char __user *user_buf,
 			 size_t count, loff_t *ppos)
 {
 	struct vled_file_context *ctx = file->private_data;
+	loff_t start_offset;
+	loff_t end_offset;
+	unsigned long snapshot_version;
+	bool snapshot_created = false;
+	bool snapshot_exhausted;
 	ssize_t ret;
 
 	(void)ppos;
 	if (!ctx)
 		return -EIO;
-	if (count == 0)
+	if (count == 0) {
+		vled_trace("READ id=%llu pid=%d count=0 result=0\n",
+			   (unsigned long long)ctx->trace_id, current->pid);
 		return 0;
+	}
 
 	for (;;) {
 		mutex_lock(&ctx->lock);
@@ -364,14 +412,23 @@ static ssize_t vled_read(struct file *file, char __user *user_buf,
 			ctx->read_offset = 0;
 			ctx->read_snapshot_valid = true;
 			ctx->read_refresh_pending = false;
+			snapshot_created = true;
 			mutex_unlock(&vled.lock);
 			break;
 		}
 		mutex_unlock(&vled.lock);
 		mutex_unlock(&ctx->lock);
 
-		if (file->f_flags & O_NONBLOCK)
+		if (file->f_flags & O_NONBLOCK) {
+			vled_trace("READ id=%llu pid=%d count=%zu result=-EAGAIN "
+				   "reason=no-new-version\n",
+				   (unsigned long long)ctx->trace_id, current->pid,
+				   count);
 			return -EAGAIN;
+		}
+
+		vled_trace("WAIT id=%llu pid=%d operation=read state=enter\n",
+			   (unsigned long long)ctx->trace_id, current->pid);
 
 		ret = wait_event_interruptible(
 			vled.wait_queue,
@@ -379,10 +436,19 @@ static ssize_t vled_read(struct file *file, char __user *user_buf,
 			!READ_ONCE(ctx->consumed_version_valid) ||
 			READ_ONCE(ctx->consumed_version) !=
 				READ_ONCE(vled.state.version));
-		if (ret)
+		if (ret) {
+			vled_trace("WAIT id=%llu pid=%d operation=read "
+				   "state=interrupted result=%zd\n",
+				   (unsigned long long)ctx->trace_id, current->pid,
+				   ret);
 			return ret;
+		}
+		vled_trace("WAIT id=%llu pid=%d operation=read state=woken\n",
+			   (unsigned long long)ctx->trace_id, current->pid);
 	}
 
+	start_offset = ctx->read_offset;
+	snapshot_version = ctx->read_snapshot_version;
 	ret = simple_read_from_buffer(user_buf, count, &ctx->read_offset,
 				      ctx->read_snapshot,
 				      ctx->read_snapshot_len);
@@ -391,7 +457,14 @@ static ssize_t vled_read(struct file *file, char __user *user_buf,
 		ctx->consumed_version_valid = true;
 		ctx->read_snapshot_valid = false;
 	}
+	end_offset = ctx->read_offset;
+	snapshot_exhausted = !ctx->read_snapshot_valid;
 	mutex_unlock(&ctx->lock);
+	vled_trace("READ id=%llu pid=%d requested=%zu result=%zd offset=%lld->%lld "
+		   "snapshot_version=%lu snapshot_created=%d exhausted=%d\n",
+		   (unsigned long long)ctx->trace_id, current->pid, count, ret,
+		   (long long)start_offset, (long long)end_offset,
+		   snapshot_version, snapshot_created, snapshot_exhausted);
 	return ret;
 }
 
@@ -427,19 +500,31 @@ static ssize_t vled_write(struct file *file, const char __user *user_buf,
 	char *escaped_text;
 	char *new_json;
 	char *command;
+	char trace_command[81] = "";
 	size_t old_offset;
-	bool changed;
+	size_t new_offset = 0;
+	size_t published_len = 0;
+	bool changed = false;
 	bool should_wake_waiters = false;
+	unsigned long published_version = 0;
 	int json_len;
 	ssize_t ret;
 
 	(void)ppos;
 	if (!ctx)
 		return -EIO;
-	if (count == 0)
+	if (count == 0) {
+		vled_trace("WRITE id=%llu pid=%d count=0 result=0\n",
+			   (unsigned long long)ctx->trace_id, current->pid);
 		return 0;
-	if (count >= PAGE_SIZE)
+	}
+	if (count >= PAGE_SIZE) {
+		vled_trace("WRITE id=%llu pid=%d count=%zu result=-EMSGSIZE "
+			   "page_size=%lu\n",
+			   (unsigned long long)ctx->trace_id, current->pid, count,
+			   (unsigned long)PAGE_SIZE);
 		return -EMSGSIZE;
+	}
 
 	new_json = kzalloc(PAGE_SIZE, GFP_KERNEL);
 	if (!new_json)
@@ -457,13 +542,13 @@ static ssize_t vled_write(struct file *file, const char __user *user_buf,
 	}
 
 	mutex_lock(&ctx->lock);
+	old_offset = ctx->write_offset;
 	if (ctx->write_offset >= PAGE_SIZE ||
 	    count >= PAGE_SIZE - ctx->write_offset) {
 		ret = -ENOSPC;
 		goto unlock_context;
 	}
 
-	old_offset = ctx->write_offset;
 	if (copy_from_user(ctx->write_buffer + old_offset, user_buf, count)) {
 		memset(ctx->write_buffer + old_offset, 0, count + 1);
 		ret = -EFAULT;
@@ -472,6 +557,7 @@ static ssize_t vled_write(struct file *file, const char __user *user_buf,
 	ctx->write_buffer[old_offset + count] = '\0';
 	command = ctx->write_buffer + old_offset;
 	vled_strip_line_end(command);
+	vled_format_trace_text(command, trace_command, sizeof(trace_command));
 
 	vled_lock_device(ctx);
 	ret = vled_parse_command(&vled.state, command, candidate, &changed);
@@ -492,6 +578,9 @@ static ssize_t vled_write(struct file *file, const char __user *user_buf,
 	memcpy(vled.buffer, new_json, (size_t)json_len);
 	vled.buffer_len = json_len;
 	ctx->write_offset = old_offset + count;
+	new_offset = ctx->write_offset;
+	published_version = vled.state.version;
+	published_len = vled.buffer_len;
 	ctx->read_offset = 0;
 	ctx->read_snapshot_len = 0;
 	ctx->read_snapshot_version = 0;
@@ -520,6 +609,19 @@ unlock_context:
 	kfree(new_json);
 	if (should_wake_waiters)
 		wake_up_interruptible(&vled.wait_queue);
+	if (ret >= 0) {
+		vled_trace("WRITE id=%llu pid=%d command=\"%s\" requested=%zu "
+			   "result=%zd offset=%zu->%zu changed=%d version=%lu "
+			   "device_buffer_len=%zu\n",
+			   (unsigned long long)ctx->trace_id, current->pid,
+			   trace_command, count, ret, old_offset, new_offset, changed,
+			   published_version, published_len);
+	} else {
+		vled_trace("WRITE id=%llu pid=%d command=\"%s\" requested=%zu "
+			   "result=%zd offset=%zu rollback=1\n",
+			   (unsigned long long)ctx->trace_id, current->pid,
+			   trace_command, count, old_offset, ret);
+	}
 	return ret;
 }
 
@@ -541,6 +643,8 @@ static int __init vled_init(void)
 	mutex_init(&vled.lock);
 	init_waitqueue_head(&vled.wait_queue);
 	vled_reset_state();
+	vled_trace("INIT step=reset page_size=%lu shared_buffer_capacity=%lu\n",
+		   (unsigned long)PAGE_SIZE, (unsigned long)sizeof(vled.buffer));
 
 	escaped_text = kzalloc(VLED_ESCAPED_TEXT_MAX, GFP_KERNEL);
 	if (!escaped_text)
@@ -552,10 +656,14 @@ static int __init vled_init(void)
 	if (json_len < 0)
 		return json_len;
 	vled.buffer_len = json_len;
+	vled_trace("INIT step=default-state version=%lu json_len=%zu\n",
+		   vled.state.version, vled.buffer_len);
 
 	ret = alloc_chrdev_region(&vled.devno, 0, 1, VLED_DEVICE_NAME);
 	if (ret)
 		return ret;
+	vled_trace("INIT step=alloc_chrdev_region major=%d minor=%d\n",
+		   MAJOR(vled.devno), MINOR(vled.devno));
 
 	cdev_init(&vled.cdev, &vled_fops);
 	vled.cdev.owner = THIS_MODULE;
@@ -563,6 +671,7 @@ static int __init vled_init(void)
 	ret = cdev_add(&vled.cdev, vled.devno, 1);
 	if (ret)
 		goto unregister_region;
+	vled_trace("INIT step=cdev_add result=success\n");
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0)
 	vled.class = class_create(VLED_CLASS_NAME);
@@ -573,6 +682,8 @@ static int __init vled_init(void)
 		ret = PTR_ERR(vled.class);
 		goto del_cdev;
 	}
+	vled_trace("INIT step=class_create class=%s result=success\n",
+		   VLED_CLASS_NAME);
 
 	vled.device = device_create(vled.class, NULL, vled.devno, NULL,
 				    VLED_DEVICE_NAME);
@@ -580,6 +691,8 @@ static int __init vled_init(void)
 		ret = PTR_ERR(vled.device);
 		goto destroy_class;
 	}
+	vled_trace("INIT step=device_create node=/dev/%s result=success\n",
+		   VLED_DEVICE_NAME);
 
 	pr_info("vled: registered /dev/%s major=%d minor=%d\n",
 		VLED_DEVICE_NAME, MAJOR(vled.devno), MINOR(vled.devno));
@@ -596,9 +709,14 @@ unregister_region:
 
 static void __exit vled_exit(void)
 {
+	vled_trace("EXIT step=device_destroy node=/dev/%s\n", VLED_DEVICE_NAME);
 	device_destroy(vled.class, vled.devno);
+	vled_trace("EXIT step=class_destroy class=%s\n", VLED_CLASS_NAME);
 	class_destroy(vled.class);
+	vled_trace("EXIT step=cdev_del\n");
 	cdev_del(&vled.cdev);
+	vled_trace("EXIT step=unregister_chrdev_region major=%d minor=%d\n",
+		   MAJOR(vled.devno), MINOR(vled.devno));
 	unregister_chrdev_region(vled.devno, 1);
 	pr_info("vled: unregistered /dev/%s\n", VLED_DEVICE_NAME);
 }
