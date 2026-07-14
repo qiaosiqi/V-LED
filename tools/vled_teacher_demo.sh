@@ -10,6 +10,9 @@ bridge="$repo_dir/tools/vled_bridge"
 fd_probe="$repo_dir/tools/vled_fd_probe"
 multiprocess_probe="$repo_dir/tools/vled_multiprocess_probe.py"
 run_start=$(date --iso-8601=seconds)
+run_id=$(date '+%Y%m%d-%H%M%S')
+log_dir=${VLED_LOG_DIR:-"$repo_dir/logs"}
+log_file="$log_dir/vled-teacher-demo-$run_id.log"
 loaded=0
 bridge_pid=
 step_number=0
@@ -21,6 +24,21 @@ if [[ $# -gt 2 ]]; then
     echo "  with IP: also forward state to the Windows simulator on UDP 9000" >&2
     exit 2
 fi
+
+timestamp_stream() {
+    local line
+
+    while IFS= read -r line || [[ -n $line ]]; do
+        printf '[%(%Y-%m-%d %H:%M:%S %z)T] %s\n' -1 "$line"
+    done
+}
+
+mkdir -p "$log_dir"
+: > "$log_file"
+exec > >(timestamp_stream | tee -a "$log_file") 2>&1
+printf '[LOG] start_time=%s\n' "$run_start"
+printf '[LOG] file=%s\n' "$log_file"
+printf '[LOG] device=%s windows_target=%s\n' "$device" "${windows_ip:-disabled}"
 
 if [[ -z $kernel_cc ]]; then
     if command -v x86_64-linux-gnu-gcc-13 >/dev/null 2>&1; then
@@ -211,3 +229,4 @@ if [[ -n $windows_ip ]]; then
     echo "  [PASS] Linux 状态也已通过 UDP bridge 发送到 $windows_ip:9000。"
 fi
 echo "VLED teacher demonstration: PASS"
+echo "完整带时间戳日志已保存到: $log_file"

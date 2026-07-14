@@ -73,6 +73,8 @@ Linux 加载模块并允许普通用户访问 `/dev/vled` 后运行：
 
 第二种形式要求 Windows 已运行 `python simulator/vled_sim.py`。教师脚本内部按需
 调用 sudo，不要使用 `sudo ./tools/vled_teacher_demo.sh` 启动整个脚本。
+终端输出会继续实时显示，同时完整保存到带启动时间的
+`logs/vled-teacher-demo-YYYYmmdd-HHMMSS.log`；日志中的每一行也带有时间戳。
 
 ## 规范工具名称
 
