@@ -4,6 +4,7 @@
 #include <linux/fs.h>
 #include <linux/init.h>
 #include <linux/kernel.h>
+#include <linux/lockdep.h>
 #include <linux/mm.h>
 #include <linux/module.h>
 #include <linux/mutex.h>
@@ -59,7 +60,24 @@ struct vled_file_context {
 	char *write_buffer;
 };
 
+/*
+ * Global nested-lock order:
+ *
+ *     vled_file_context.lock -> vled_device.lock
+ *
+ * read(), write(), and poll() must never acquire these locks in reverse
+ * order.  No path holds either mutex while sleeping in the wait queue.  Each
+ * independent open owns a different file-context lock and different read and
+ * write offsets; vled_device.lock only serializes publication of shared state.
+ */
 static struct vled_device vled;
+
+static void vled_lock_device(struct vled_file_context *ctx)
+{
+	/* Enforce the documented order in lockdep-enabled target kernels. */
+	lockdep_assert_held(&ctx->lock);
+	mutex_lock(&vled.lock);
+}
 
 static void vled_reset_state(void)
 {
@@ -336,7 +354,7 @@ static ssize_t vled_read(struct file *file, char __user *user_buf,
 		    ctx->read_offset < ctx->read_snapshot_len)
 			break;
 
-		mutex_lock(&vled.lock);
+		vled_lock_device(ctx);
 		if (ctx->read_refresh_pending || !ctx->consumed_version_valid ||
 		    ctx->consumed_version != vled.state.version) {
 			memcpy(ctx->read_snapshot, vled.buffer, vled.buffer_len);
@@ -391,7 +409,7 @@ static __poll_t vled_poll(struct file *file, poll_table *wait)
 	    ctx->read_offset < ctx->read_snapshot_len) {
 		mask = EPOLLIN | EPOLLRDNORM;
 	} else {
-		mutex_lock(&vled.lock);
+		vled_lock_device(ctx);
 		if (ctx->read_refresh_pending || !ctx->consumed_version_valid ||
 		    ctx->consumed_version != vled.state.version)
 			mask = EPOLLIN | EPOLLRDNORM;
@@ -411,7 +429,7 @@ static ssize_t vled_write(struct file *file, const char __user *user_buf,
 	char *command;
 	size_t old_offset;
 	bool changed;
-	bool should_wake = false;
+	bool should_wake_waiters = false;
 	int json_len;
 	ssize_t ret;
 
@@ -455,7 +473,7 @@ static ssize_t vled_write(struct file *file, const char __user *user_buf,
 	command = ctx->write_buffer + old_offset;
 	vled_strip_line_end(command);
 
-	mutex_lock(&vled.lock);
+	vled_lock_device(ctx);
 	ret = vled_parse_command(&vled.state, command, candidate, &changed);
 	if (ret)
 		goto rollback_locked;
@@ -479,7 +497,15 @@ static ssize_t vled_write(struct file *file, const char __user *user_buf,
 	ctx->read_snapshot_version = 0;
 	ctx->read_snapshot_valid = false;
 	ctx->read_refresh_pending = true;
-	should_wake = changed;
+	/*
+	 * A changed version wakes every open context so it can re-check state.
+	 * A successful no-op/STATUS write must wake the queue as well: fork() or
+	 * dup() can share this exact file context with a reader already blocked in
+	 * read(), and read_refresh_pending is that reader's readiness condition.
+	 * Independent opens do not become readable on a no-op because their own
+	 * refresh flag is false and the shared version remains unchanged.
+	 */
+	should_wake_waiters = true;
 	mutex_unlock(&vled.lock);
 	ret = count;
 	goto unlock_context;
@@ -492,7 +518,7 @@ unlock_context:
 	kfree(candidate);
 	kfree(escaped_text);
 	kfree(new_json);
-	if (should_wake)
+	if (should_wake_waiters)
 		wake_up_interruptible(&vled.wait_queue);
 	return ret;
 }

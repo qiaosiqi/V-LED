@@ -36,6 +36,10 @@ make -C "$repo_dir/driver" V=1 CC="$kernel_cc"
 make -C "$repo_dir/tools" clean
 make -C "$repo_dir/tools" CFLAGS='-Wall -Wextra -Werror -O2'
 
+echo "== static event and multiprocess contracts =="
+python3 "$repo_dir/tools/test_p5_contract.py"
+python3 "$repo_dir/tools/test_multiprocess_contract.py"
+
 echo "== bridge black-box acceptance =="
 python3 "$repo_dir/tools/vled_bridge_probe.py" --bridge "$repo_dir/tools/vled_bridge"
 
@@ -62,6 +66,10 @@ python3 "$repo_dir/tools/vled_verify.py" --device "$device" \
 echo "== P5 poll and wait-queue acceptance =="
 "$repo_dir/tools/vled_poll_probe" "$device"
 
+echo "== real fork multiprocess acceptance =="
+python3 "$repo_dir/tools/vled_multiprocess_probe.py" --device "$device" \
+    --iterations "$iterations"
+
 echo "== repeated module lifecycle =="
 for ((cycle=1; cycle<=cycles; cycle++)); do
     sudo rmmod vled
@@ -85,4 +93,4 @@ if grep -Eqi 'warning|oops|BUG:|lockdep|use-after-free|general protection fault'
     exit 1
 fi
 
-echo "VLED P1-P5 verify: PASS (module will be unloaded by cleanup trap)"
+echo "VLED P1-P5 + multiprocess verify: PASS (module will be unloaded by cleanup trap)"

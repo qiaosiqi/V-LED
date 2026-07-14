@@ -64,7 +64,8 @@ P3 实现提交为 `b0fb0b6`，目标修复提交为 `b11d5c7`：统一入口 `t
 3. 写入与当前值相同的 TEXT/COLOR/BRIGHTNESS/MODE 返回成功，但版本不变。
 4. 已经为空时再次 CLEAR 返回成功，但版本不变。
 5. STATUS、非法命令、超长写入、复制失败和内存失败均不改变版本。
-6. P5 中只有版本实际变化才唤醒 wait queue。
+6. P5 中成功写入会唤醒 wait queue 重新检查条件；只有版本实际变化才使独立 FD
+   可读。无变化写入仅刷新 `fork/dup` 共享的当前 file context，不发布状态事件。
 
 ### 2.5 错误码
 
@@ -201,6 +202,30 @@ P3 实现提交为 `b0fb0b6`，目标修复提交为 `b11d5c7`：统一入口 `t
 | T-CON-05 | 压力测试前后比较 dmesg | 无新增 warning/oops/BUG/lockdep 报告 |
 
 并发测试必须用 JSON 解析器验证每一条采样状态；只检查字符串中出现 `"type":"state"` 不算通过。
+
+### 8.1 真实多进程、锁顺序与独立写偏移验收
+
+线程压力不能替代多进程验收。`tools/vled_multiprocess_probe.py` 强制使用 Linux
+`fork`，每个阶段由父进程设置超时；子进程不能按时退出时立即终止并报告可能的死锁
+或丢失唤醒。驱动所有嵌套加锁路径只允许以下顺序：
+
+```text
+vled_file_context.lock -> vled_device.lock
+```
+
+等待 wait queue 前必须释放两把 mutex。每次独立 `open()` 分配独立的 file context、
+PAGE_SIZE 写入页和 `write_offset`；设备状态由全局 device mutex 保护并在成功解析、
+完整生成 JSON 后一次性发布。
+
+| ID | 真实进程场景 | 通过条件 |
+|---|---|---|
+| T-MP-01 | reader、writer 子进程分别 `open()` 同一 `/dev/vled` | reader 先读初始状态，随后被 writer 的新版本唤醒并读到完整新 JSON；双方限时退出 |
+| T-MP-02 | 进程 A 将自己的写入页用满，进程 B 独立 `open()` 后写入 | A 后续写返回 `ENOSPC`，B 写入成功且状态可见，证明写偏移不是全局变量 |
+| T-MP-03 | 4 个 writer 与 4 个 reader 进程同时运行 | 所有进程限时完成、version 不倒退、每次状态均为合法完整 JSON |
+| T-MP-04 | `fork()` 继承同一个已打开 FD，reader 阻塞后 writer 写 `STATUS` | reader 被刷新唤醒，状态和 version 不变；证明共享 file context 不会因无变化写入永久阻塞 |
+
+Windows 只能运行静态契约和 Python 语法检查；T-MP-01..04 必须在目标 Linux 加载
+本次构建的 `driver/vled.ko` 后运行，未取得该输出前状态为 `TARGET_PENDING`。
 
 ## 9. 用户态工具和网络验收
 

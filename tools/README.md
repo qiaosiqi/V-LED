@@ -33,8 +33,9 @@ B 部分位于 Linux 虚拟机用户态，包含程序和自动化入口：
 2. `vled_bridge`：读取 `/dev/vled` 返回的 JSON 状态字符串，并通过 UDP 发送给 Windows 主机上的 VLED 模拟器。
 3. `vled_fd_probe`：P1 自动验收探针，检查 PAGE_SIZE 边界、多 FD 独立偏移、稳定快照和失败原子回滚。
 4. `vled_poll_probe`：P5 探针，检查 poll、wait queue、阻塞/非阻塞 read、信号中断和事件收敛。
-5. `vled_verify.sh`：P1–P5 统一验收入口，负责严格构建、bridge 黑盒测试、模块生命周期、业务/错误码/并发/poll 回归和内核日志检查。
-6. `vled_demo.sh`：Linux→Windows 可复现演示编排；任一步失败都会停止。
+5. `vled_multiprocess_probe.py`：真实 fork 多进程验收，检查分别 open、独立写偏移、共享状态、4+4 进程压力和共享 FD 唤醒。
+6. `vled_verify.sh`：P1–P5 与多进程统一验收入口，负责严格构建、bridge 黑盒测试、模块生命周期、业务/错误码/并发/poll/多进程回归和内核日志检查。
+7. `vled_demo.sh`：Linux→Windows 可复现演示编排；任一步失败都会停止。
 
 驱动本身不直接联网，网络转发放在用户态 `vled_bridge` 程序中完成。
 
@@ -136,6 +137,7 @@ VLED_DEVICE=/dev/vled VLED_ITERATIONS=500 VLED_LIFECYCLE_CYCLES=5 \
 ```bash
 python3 tools/vled_verify.py --device /dev/vled --iterations 200
 python3 tools/vled_bridge_probe.py --bridge tools/vled_bridge
+python3 tools/vled_multiprocess_probe.py --device /dev/vled --iterations 100
 ```
 
 ## UDP 桥接测试
